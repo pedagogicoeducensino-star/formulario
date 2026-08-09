@@ -72,7 +72,6 @@
     .input-ans { font-family: inherit; font-size: 1rem; width: 100%; box-sizing: border-box; border-radius: 6px; border: 1px solid #D1D5DB; padding: 10px; transition: border-color 0.2s; }
     .input-ans:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2); }
     
-    /* ESTILOS DAS ESTRELINHAS */
     .rating-icon-preview { font-size: 2.5rem; cursor: pointer; transition: 0.2s; user-select: none; margin-right: 5px; filter: grayscale(100%) opacity(0.3); }
     .rating-icon-preview.hovered { filter: grayscale(0%) opacity(0.7); transform: scale(1.15); }
     .rating-icon-preview.active { filter: grayscale(0%) opacity(1); transform: scale(1.15); }
@@ -100,12 +99,21 @@
   </div>
 
   <script>
+    // =========================================================================
+    // 1. CONFIGURAÇÃO DA API (COLE SEU LINK AQUI)
+    // =========================================================================
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwo0rtQmGFQFEtu1Xgtth0TuKQ65QeMzhgiFGHAbLemPIEv8wpDxN37c_L4j3A2QhM/exec';
+    
+    // 2. PEGA O ID DO FORMULÁRIO DIRETO DO LINK DO GITHUB
+    const urlParams = new URLSearchParams(window.location.search);
+    const idDoFormulario = urlParams.get('id');
+    // =========================================================================
+
     window.onerror = function(msg, url, line) {
         document.getElementById('conteudo-form').innerHTML = '<div style="padding:40px; color:red; text-align:center;"><h2 style="font-size:2rem;">🛑 Erro no Código</h2><p style="font-size:1.2rem;">Por favor, mostre este erro ao suporte:</p><p style="background:#fdd; padding:15px; border-radius:8px;">' + msg + ' (Linha: ' + line + ')</p></div>';
         return false;
     };
 
-    const idDoFormulario = "<?= formId ?>";
     var tituloDaPratica = "Prática Profissional"; 
     var nomeDoAlunoGlobal = ""; 
 
@@ -114,7 +122,6 @@
         document.getElementById('alerta-elegante').style.display = 'flex';
     }
 
-    // FORMATAÇÃO CORRETA DO NOME
     function formatarNomeProprio(nome) {
         if (!nome) return '';
         var excecoes = ['de', 'da', 'do', 'dos', 'das', 'e'];
@@ -143,12 +150,20 @@
         document.getElementById('conteudo-form').innerHTML = html;
     }
 
-    google.script.run
-      .withSuccessHandler(renderizarFormulario)
-      .withFailureHandler(function(erro){
-          document.getElementById('conteudo-form').innerHTML = '<div style="text-align:center; padding:40px;"><h1 style="color:#DC2626;">⚠️ Erro de Conexão</h1><p>' + erro + '</p></div>';
-      })
-      .buscarFormularioParaAluno(idDoFormulario);
+    // BUSCA O FORMULÁRIO ASSIM QUE A PÁGINA CARREGA (Método Novo para GitHub)
+    if (idDoFormulario) {
+        fetch(API_URL + "?action=buscarFormularioParaAluno&id=" + idDoFormulario)
+            .then(r => r.json())
+            .then(resposta => {
+                if(resposta.error || resposta.erro) throw new Error(resposta.error || resposta.erro);
+                renderizarFormulario(JSON.stringify(resposta)); 
+            })
+            .catch(erro => {
+                document.getElementById('conteudo-form').innerHTML = '<div style="text-align:center; padding:40px;"><h1 style="color:#DC2626;">⚠️ Erro de Conexão</h1><p>Não foi possível carregar o formulário. Verifique o link.</p></div>';
+            });
+    } else {
+        document.getElementById('conteudo-form').innerHTML = '<div style="text-align:center; padding:40px;"><h1 style="color:#DC2626;">⚠️ Link Inválido</h1><p>O ID do formulário está faltando na URL.</p></div>';
+    }
 
     function renderizarFormulario(respostaJson) {
       var container = document.getElementById('conteudo-form');
@@ -218,7 +233,6 @@
 
            var boxMatAntiga = inputMat.closest('.preview-q-container');
            var boxContAntiga = inputCont.closest('.preview-q-container');
-
            var textoContato = (inputCont.type === 'email') ? 'E-mail' : 'WhatsApp';
 
            var mestreDestacada = document.createElement('div');
@@ -227,7 +241,6 @@
            
            mestreDestacada.innerHTML = '<h3 style="margin-top: 0; color: var(--sidebar-bg); border-bottom: 1px solid #E5E7EB; padding-bottom: 10px; margin-bottom: 25px; font-size: 1.3rem;">👤 Identificação do Aluno</h3>';
 
-           // MUDANÇA PRINCIPAL AQUI: Utilizando CSS Grid para forçar as caixinhas exatamente lado a lado
            var flexInputs = document.createElement('div');
            flexInputs.style.cssText = 'display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 15px !important; align-items: flex-start !important; width: 100%; box-sizing: border-box;';
 
@@ -253,12 +266,8 @@
            divSaudacao.innerHTML = '<p id="texto-nome-aluno" style="margin: 0; font-size:1.1rem;"></p>';
            mestreDestacada.appendChild(divSaudacao);
            
-           if (boxMatAntiga) {
-               boxMatAntiga.parentNode.removeChild(boxMatAntiga);
-           }
-           if (boxContAntiga && boxContAntiga.parentNode) {
-               boxContAntiga.parentNode.removeChild(boxContAntiga);
-           }
+           if (boxMatAntiga) { boxMatAntiga.parentNode.removeChild(boxMatAntiga); }
+           if (boxContAntiga && boxContAntiga.parentNode) { boxContAntiga.parentNode.removeChild(boxContAntiga); }
 
            var page0 = document.getElementById('page-0');
            if (page0) {
@@ -323,8 +332,10 @@
 
       clearTimeout(timerBuscaMatricula);
       timerBuscaMatricula = setTimeout(function() {
-         google.script.run
-           .withSuccessHandler(function(nomeEncontrado) {
+          // MÉTODO NOVO PARA GITHUB (fetch)
+          fetch(API_URL + "?action=buscarNomeAlunoPorMatricula&matricula=" + matricula)
+            .then(r => r.json())
+            .then(nomeEncontrado => {
               if (nomeEncontrado && nomeEncontrado.trim() !== "") {
                  var nomeFormatado = formatarNomeProprio(nomeEncontrado);
                  nomeDoAlunoGlobal = nomeFormatado;
@@ -339,12 +350,11 @@
                  nomeDoAlunoGlobal = "";
                  saudacaoP.innerHTML = "⚠️ <strong style='color:#DC2626;'>Matrícula não encontrada no sistema.</strong> <span style='font-size:0.95rem; color:#6B7280; display:block; margin-top:2px;'>Por favor, procure a coordenação para orientações.</span>";
               }
-           })
-           .withFailureHandler(function(erro) { 
+            })
+            .catch(erro => {
                saudacaoP.innerHTML = "⚠️ Erro de conexão ao buscar. Tente novamente.";
                saudacaoP.style.color = "#DC2626";
-           })
-           .buscarNomeAlunoPorMatricula(matricula);
+            });
       }, 600);
     }
 
@@ -413,17 +423,18 @@
              var txtOrig = btn ? btn.innerText : "Iniciar";
              if (btn) { btn.innerText = "⏳ Verificando..."; btn.disabled = true; }
 
-             google.script.run
-               .withSuccessHandler(function(jaRespondeu) {
-                   if (btn) { btn.innerText = txtOrig; btn.disabled = false; }
-                   if (jaRespondeu) mostrarBloqueio("Agendamento Já Realizado", "Olá, " + (nomeDoAlunoGlobal || 'Aluno(a)') + "!<br>Identificamos que você <strong>já enviou suas respostas</strong>.");
-                   else continuarTransicao(direction);
-               })
-               .withFailureHandler(function(erro) {
-                   if (btn) { btn.innerText = txtOrig; btn.disabled = false; }
-                   continuarTransicao(direction);
-               })
-               .verificarDuplicidadeBanco(idDoFormulario, matInput.value.trim());
+             // MÉTODO NOVO PARA GITHUB (fetch)
+             fetch(API_URL + "?action=verificarDuplicidadeBanco&id=" + idDoFormulario + "&matricula=" + matInput.value.trim())
+                .then(r => r.json())
+                .then(jaRespondeu => {
+                    if (btn) { btn.innerText = txtOrig; btn.disabled = false; }
+                    if (jaRespondeu) mostrarBloqueio("Agendamento Já Realizado", "Olá, " + (nomeDoAlunoGlobal || 'Aluno(a)') + "!<br>Identificamos que você <strong>já enviou suas respostas</strong>.");
+                    else continuarTransicao(direction);
+                })
+                .catch(erro => {
+                    if (btn) { btn.innerText = txtOrig; btn.disabled = false; }
+                    continuarTransicao(direction);
+                });
              return; 
           }
         }
@@ -647,8 +658,13 @@
       var container = document.getElementById('conteudo-form');
       container.innerHTML = '<div style="text-align:center; padding: 60px;"><div class="emoji-animado">⏳</div><h2 style="color: var(--sidebar-bg); margin-top:20px;">Registrando sua prática...</h2></div>';
 
-      google.script.run
-        .withSuccessHandler(function(resposta) {
+      // MÉTODO NOVO PARA GITHUB (fetch POST)
+      fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({action: 'salvarRespostaE_MandarEmail', dados: dadosParaOBackend})
+      })
+      .then(r => r.json())
+      .then(resposta => {
             var htmlRespostasExtraidas = "";
             var temRespostas = false;
 
@@ -699,12 +715,11 @@
             var htmlSucesso = '<div style="text-align:center; padding: 20px;"><div class="emoji-animado" style="font-size: 5rem; margin-bottom: 10px;">✔️</div><h1 style="color: #10B981; border:none; margin-top:0; font-size:2.2rem;">Agendamento Concluído!</h1><p style="font-size: 1.15rem; color: #4B5563;">Sua resposta foi registrada com sucesso.</p>' + blocoDetalhes + btnWhats + msgEmail + '<p style="color:var(--text-light); font-weight:bold; margin-top:40px; font-size: 1.1rem;">Você já pode fechar esta aba.</p></div>';
 
             document.getElementById('conteudo-form').innerHTML = htmlSucesso;
-        })
-        .withFailureHandler(function(erro) {
+      })
+      .catch(erro => {
             alertaElegante("Ocorreu um erro ao enviar. Tente novamente.");
             window.location.reload(); 
-        })
-        .salvarRespostaE_MandarEmail(dadosParaOBackend);
+      });
     }
   </script>
 </body>
