@@ -852,8 +852,8 @@
     // =========================================================================
     // CONFIGURAÇÃO DA API (ATENÇÃO: PREENCHA OS LINKS ABAIXO)
     // =========================================================================
-    const API_URL = 'COLE_AQUI_A_URL_DO_SEU_WEB_APP'; 
-    const SITE_ALUNO_URL = 'COLE_AQUI_O_LINK_DO_SEU_GITHUB_PAGES/FormularioAluno.html';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwo0rtQmGFQFEtu1Xgtth0TuKQ65QeMzhgiFGHAbLemPIEv8wpDxN37c_L4j3A2QhM/exec'; 
+    const SITE_ALUNO_URL = 'https://script.google.com/macros/s/AKfycbwo0rtQmGFQFEtu1Xgtth0TuKQ65QeMzhgiFGHAbLemPIEv8wpDxN37c_L4j3A2QhM/exec';
     // =========================================================================
 
     let currentEditingFormId = null;
@@ -875,7 +875,7 @@
        verificarSessaoLogin();
        renderizarDropdownTurmas(); 
        
-       if (API_URL !== 'COLE_AQUI_A_URL_DO_SEU_WEB_APP') {
+       if (API_URL !== 'https://script.google.com/macros/s/AKfycbwo0rtQmGFQFEtu1Xgtth0TuKQ65QeMzhgiFGHAbLemPIEv8wpDxN37c_L4j3A2QhM/exec') {
            fetch(API_URL + "?action=buscarAlunos")
                .then(r => r.json())
                .then(renderizarBancoDeAlunos)
