@@ -871,23 +871,19 @@
       "Operador de Caixa", "Secretariado", "Telemarketing"
     ];
 
-    window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', () => {
        verificarSessaoLogin();
        renderizarDropdownTurmas(); 
        
-       if (API_URL !== 'https://script.google.com/macros/s/AKfycbwo0rtQmGFQFEtu1Xgtth0TuKQ65QeMzhgiFGHAbLemPIEv8wpDxN37c_L4j3A2QhM/exec') {
-           fetch(API_URL + "?action=buscarAlunos")
-               .then(r => r.json())
-               .then(renderizarBancoDeAlunos)
-               .catch(e => console.error("Erro ao buscar alunos", e));
-               
-           fetch(API_URL + "?action=buscarHistorico")
-               .then(r => r.json())
-               .then(renderizarHistorico)
-               .catch(e => console.error("Erro ao buscar histórico", e)); 
-       } else {
-           alert("⚠️ Atenção: Você precisa colocar a URL da sua API no código (linha 578) para que os dados sejam carregados.");
-       }
+       fetch(API_URL + "?action=buscarAlunos")
+           .then(r => r.json())
+           .then(renderizarBancoDeAlunos)
+           .catch(e => console.error("Erro ao buscar alunos", e));
+           
+       fetch(API_URL + "?action=buscarHistorico")
+           .then(r => r.json())
+           .then(renderizarHistorico)
+           .catch(e => console.error("Erro ao buscar histórico", e)); 
     });
 
     document.addEventListener('click', function(e) {
