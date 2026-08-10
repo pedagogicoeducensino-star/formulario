@@ -151,10 +151,11 @@
     }
 
     if (idDoFormulario) {
-        fetch(API_URL + "?action=buscarFormularioParaAluno&id=" + idDoFormulario)
+        // CORREÇÃO 1: 'action=buscarFormularioAluno' para bater com o Código.gs
+        fetch(API_URL + "?action=buscarFormularioAluno&id=" + idDoFormulario)
             .then(r => r.json())
             .then(resposta => {
-                if(resposta.error || resposta.erro) throw new Error(resposta.error || resposta.erro);
+                if(resposta.error || resposta.erro) throw new Error(resposta.error || resposta.erro || resposta.message);
                 renderizarFormulario(resposta); 
             })
             .catch(erro => {
@@ -172,9 +173,6 @@
         tituloDaPratica = dadosForm.titulo || dadosForm.nome || "Prática Profissional";
         var prazoString = dadosForm.prazo || dadosForm.dataLimite || "Sem limite";
         
-        // ====================================================================
-        // RAIO-X: Tenta encontrar o conteúdo da prova. Se não achar, imprime a resposta exata.
-        // ====================================================================
         var pacoteDeDados = dadosForm.jsonPerguntas || dadosForm.htmlProva || dadosForm.html || dadosForm.conteudo || dadosForm.prova || dadosForm.dados || "";
         
         if (!pacoteDeDados) {
@@ -336,11 +334,12 @@
 
       clearTimeout(timerBuscaMatricula);
       timerBuscaMatricula = setTimeout(function() {
-          fetch(API_URL + "?action=buscarNomeAlunoPorMatricula&matricula=" + matricula)
+          // CORREÇÃO 2: 'action=buscarNomeAluno'
+          fetch(API_URL + "?action=buscarNomeAluno&matricula=" + matricula)
             .then(r => r.json())
             .then(nomeEncontrado => {
-              if (nomeEncontrado && nomeEncontrado.trim() !== "") {
-                 var nomeFormatado = formatarNomeProprio(nomeEncontrado);
+              if (nomeEncontrado && nomeEncontrado.nome && nomeEncontrado.nome.trim() !== "") {
+                 var nomeFormatado = formatarNomeProprio(nomeEncontrado.nome);
                  nomeDoAlunoGlobal = nomeFormatado;
                  
                  var hora = new Date().getHours();
@@ -426,11 +425,12 @@
              var txtOrig = btn ? btn.innerText : "Iniciar";
              if (btn) { btn.innerText = "⏳ Verificando..."; btn.disabled = true; }
 
-             fetch(API_URL + "?action=verificarDuplicidadeBanco&id=" + idDoFormulario + "&matricula=" + matInput.value.trim())
+             // CORREÇÃO 3: 'action=verificarDuplicidade&formId=...'
+             fetch(API_URL + "?action=verificarDuplicidade&formId=" + idDoFormulario + "&matricula=" + matInput.value.trim())
                 .then(r => r.json())
-                .then(jaRespondeu => {
+                .then(resposta => {
                     if (btn) { btn.innerText = txtOrig; btn.disabled = false; }
-                    if (jaRespondeu) mostrarBloqueio("Agendamento Já Realizado", "Olá, " + (nomeDoAlunoGlobal || 'Aluno(a)') + "!<br>Identificamos que você <strong>já enviou suas respostas</strong>.");
+                    if (resposta.duplicado) mostrarBloqueio("Agendamento Já Realizado", "Olá, " + (nomeDoAlunoGlobal || 'Aluno(a)') + "!<br>Identificamos que você <strong>já enviou suas respostas</strong>.");
                     else continuarTransicao(direction);
                 })
                 .catch(erro => {
@@ -660,9 +660,10 @@
       var container = document.getElementById('conteudo-form');
       container.innerHTML = '<div style="text-align:center; padding: 60px;"><div class="emoji-animado">⏳</div><h2 style="color: var(--sidebar-bg); margin-top:20px;">Registrando sua prática...</h2></div>';
 
+      // CORREÇÃO 4: 'action: salvarResposta' e 'dadosAluno: ...'
       fetch(API_URL, {
           method: 'POST',
-          body: JSON.stringify({action: 'salvarRespostaE_MandarEmail', dados: dadosParaOBackend})
+          body: JSON.stringify({action: 'salvarResposta', dadosAluno: dadosParaOBackend})
       })
       .then(r => r.json())
       .then(resposta => {
