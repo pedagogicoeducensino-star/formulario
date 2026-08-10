@@ -100,11 +100,11 @@
 
   <script>
     // =========================================================================
-    // 1. CONFIGURAÇÃO DA API (COLE SEU LINK AQUI)
+    // 1. CONFIGURAÇÃO DA API 
     // =========================================================================
     const API_URL = 'https://script.google.com/macros/s/AKfycbwo0rtQmGFQFEtu1Xgtth0TuKQ65QeMzhgiFGHAbLemPIEv8wpDxN37c_L4j3A2QhM/exec';
     
-    // 2. PEGA O ID DO FORMULÁRIO DIRETO DO LINK DO GITHUB
+    // 2. PEGA O ID DO FORMULÁRIO DIRETO DO LINK
     const urlParams = new URLSearchParams(window.location.search);
     const idDoFormulario = urlParams.get('id');
     // =========================================================================
@@ -150,165 +150,177 @@
         document.getElementById('conteudo-form').innerHTML = html;
     }
 
-    // BUSCA O FORMULÁRIO ASSIM QUE A PÁGINA CARREGA (Método Novo para GitHub)
     if (idDoFormulario) {
         fetch(API_URL + "?action=buscarFormularioParaAluno&id=" + idDoFormulario)
             .then(r => r.json())
             .then(resposta => {
                 if(resposta.error || resposta.erro) throw new Error(resposta.error || resposta.erro);
-                renderizarFormulario(JSON.stringify(resposta)); 
+                renderizarFormulario(resposta); 
             })
             .catch(erro => {
-                document.getElementById('conteudo-form').innerHTML = '<div style="text-align:center; padding:40px;"><h1 style="color:#DC2626;">⚠️ Erro de Conexão</h1><p>Não foi possível carregar o formulário. Verifique o link.</p></div>';
+                document.getElementById('conteudo-form').innerHTML = '<div style="text-align:center; padding:40px;"><h1 style="color:#DC2626;">⚠️ Erro de Conexão</h1><p>Não foi possível carregar o formulário da planilha.</p><p>Detalhe: ' + erro.message + '</p></div>';
             });
     } else {
-        document.getElementById('conteudo-form').innerHTML = '<div style="text-align:center; padding:40px;"><h1 style="color:#DC2626;">⚠️ Link Inválido</h1><p>O ID do formulário está faltando na URL.</p></div>';
+        document.getElementById('conteudo-form').innerHTML = '<div style="text-align:center; padding:40px;"><h1 style="color:#DC2626;">⚠️ Link Inválido</h1><p>O código ID do formulário está faltando na URL.</p></div>';
     }
 
-    function renderizarFormulario(respostaJson) {
+    function renderizarFormulario(dadosForm) {
       var container = document.getElementById('conteudo-form');
-      if (!respostaJson || respostaJson.error) {
-        container.innerHTML = '<div style="text-align:center; padding:40px;"><h1 style="color:#DC2626;">⚠️ Formulário não encontrado!</h1></div>';
-        return;
-      }
-
       try {
-        var dadosForm = JSON.parse(respostaJson);
+        if (typeof dadosForm === 'string') dadosForm = JSON.parse(dadosForm);
+
         tituloDaPratica = dadosForm.titulo || "Prática Profissional";
         var prazoString = dadosForm.prazo || dadosForm.dataLimite || "Sem limite";
         
         var pacoteDeDados = dadosForm.jsonPerguntas || dadosForm.htmlProva || "";
-        if (!pacoteDeDados) throw new Error("O conteúdo da prática está vazio.");
+        if (!pacoteDeDados) throw new Error("A planilha não retornou o conteúdo das perguntas.");
         
         var htmlLimpo = decodeURIComponent(pacoteDeDados);
-        
-        htmlLimpo = htmlLimpo.replace(/Instituição:.*?Educ Centro de Ensino(<br>|<\/p>|<\/div>|\n)?/gi, '');
-        htmlLimpo = htmlLimpo.replace(/Duração da Aula:.*?2 horas(<br>|<\/p>|<\/div>|\n)?/gi, '');
-        htmlLimpo = htmlLimpo.replace(/Professor\(a\):.*?Davi(<br>|<\/p>|<\/div>|\n)?/gi, '');
-        htmlLimpo = htmlLimpo.replace(/Local:.*?Sala das Práticas(<br>|<\/p>|<\/div>|\n)?/gi, '');
+        container.innerHTML = '<div style="text-align: right; margin-bottom: 10px;"><img src="https://i.imgur.com/iF8b02o.png" style="max-height: 70px; border-radius: 8px;"></div>' + htmlLimpo;
 
-        var htmlLogo = '<div style="text-align: right; margin-bottom: 10px;"><img src="https://i.imgur.com/iF8b02o.png" style="max-height: 70px; border-radius: 8px;"></div>';
-        container.innerHTML = htmlLogo + htmlLimpo;
-
-        var htmlGrid = document.createElement('div');
-        htmlGrid.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #F9FAFB; border: 1px solid #E5E7EB; padding: 20px; border-radius: 12px; margin-top: 25px; margin-bottom: 25px; color: #4B5563; font-size: 0.95rem; box-shadow: 0 4px 6px rgba(0,0,0,0.02);';
-        htmlGrid.innerHTML = '<div><strong style="color:var(--sidebar-bg);">Instituição:</strong> Educ Centro de Ensino</div>' +
-                             '<div><strong style="color:var(--sidebar-bg);">Duração da Aula:</strong> 2 horas</div>' +
-                             '<div><strong style="color:var(--sidebar-bg);">Professor(a):</strong> Davi</div>' +
-                             '<div><strong style="color:var(--sidebar-bg);">Data Limite de Resposta:</strong> <span style="color:#DC2626; font-weight:bold;">' + prazoString + '</span></div>' +
-                             '<div style="grid-column: 1 / -1;"><strong style="color:var(--sidebar-bg);">Local:</strong> Laboratório Boreal e Práticas Profissionalizantes - Sala das Práticas</div>';
-
-        var tituloH = container.querySelector('h1, h2, h3, h4');
-        if (tituloH && tituloH.nextSibling) {
-            tituloH.parentNode.insertBefore(htmlGrid, tituloH.nextSibling);
-        } else {
-            container.appendChild(htmlGrid);
-        }
-
-        var todosOsNodes = container.querySelectorAll('*');
-        for (var n = 0; n < todosOsNodes.length; n++) {
-            if (todosOsNodes[n].tagName === 'HR' || (todosOsNodes[n].style && (todosOsNodes[n].style.borderTop.includes('dashed') || todosOsNodes[n].style.borderTop.includes('dotted')))) {
-                todosOsNodes[n].style.display = 'none';
-            }
-            if (todosOsNodes[n].childNodes.length > 0) {
-                for (var c = 0; c < todosOsNodes[n].childNodes.length; c++) {
-                    var node = todosOsNodes[n].childNodes[c];
-                    if (node.nodeType === 3) {
-                        var txt = node.nodeValue.trim();
-                        if (txt === 'Sua Matrícula Acadêmica' || txt === 'Endereço de E-mail' || txt === 'Número do WhatsApp' || txt === '*') {
-                            node.nodeValue = ''; 
+        // -------------------------------------------------------------
+        // BLINDAGEM 1: Limpeza de textos velhos
+        // -------------------------------------------------------------
+        try {
+            var todosOsNodes = container.querySelectorAll('*');
+            for (var n = 0; n < todosOsNodes.length; n++) {
+                if (todosOsNodes[n].tagName === 'HR' || (todosOsNodes[n].style && (todosOsNodes[n].style.borderTop.includes('dashed') || todosOsNodes[n].style.borderTop.includes('dotted')))) {
+                    todosOsNodes[n].style.display = 'none';
+                }
+                if (todosOsNodes[n].childNodes.length > 0) {
+                    for (var c = 0; c < todosOsNodes[n].childNodes.length; c++) {
+                        var node = todosOsNodes[n].childNodes[c];
+                        if (node.nodeType === 3) {
+                            var txt = node.nodeValue.trim();
+                            if (txt === 'Sua Matrícula Acadêmica' || txt === 'Endereço de E-mail' || txt === 'Número do WhatsApp' || txt === '*') {
+                                node.nodeValue = ''; 
+                            }
                         }
                     }
                 }
             }
-        }
+        } catch(e1) { console.log("Aviso: Falha na limpeza visual.", e1); }
 
-        var inputMat = document.getElementById('aluno_matricula');
-        var inputCont = document.getElementById('aluno_contato');
-        
-        if (inputMat && inputCont) {
-           inputMat.addEventListener('input', function() {
-               buscarNomeAluno(this.value);
-           });
+        // -------------------------------------------------------------
+        // BLINDAGEM 2: Quadro de informações da Instituição
+        // -------------------------------------------------------------
+        try {
+            var htmlGrid = document.createElement('div');
+            htmlGrid.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #F9FAFB; border: 1px solid #E5E7EB; padding: 20px; border-radius: 12px; margin-top: 25px; margin-bottom: 25px; color: #4B5563; font-size: 0.95rem; box-shadow: 0 4px 6px rgba(0,0,0,0.02);';
+            htmlGrid.innerHTML = '<div><strong style="color:var(--sidebar-bg);">Instituição:</strong> Educ Centro de Ensino</div>' +
+                                 '<div><strong style="color:var(--sidebar-bg);">Duração da Aula:</strong> 2 horas</div>' +
+                                 '<div><strong style="color:var(--sidebar-bg);">Professor(a):</strong> Davi</div>' +
+                                 '<div><strong style="color:var(--sidebar-bg);">Data Limite:</strong> <span style="color:#DC2626; font-weight:bold;">' + prazoString + '</span></div>' +
+                                 '<div style="grid-column: 1 / -1;"><strong style="color:var(--sidebar-bg);">Local:</strong> Laboratório Boreal e Práticas Profissionalizantes - Sala das Práticas</div>';
 
-           var boxMatAntiga = inputMat.closest('.preview-q-container');
-           var boxContAntiga = inputCont.closest('.preview-q-container');
-           var textoContato = (inputCont.type === 'email') ? 'E-mail' : 'WhatsApp';
+            var tituloH = container.querySelector('h1, h2, h3, h4');
+            if (tituloH && tituloH.parentNode) {
+                if (tituloH.nextSibling) tituloH.parentNode.insertBefore(htmlGrid, tituloH.nextSibling);
+                else tituloH.parentNode.appendChild(htmlGrid);
+            } else {
+                container.appendChild(htmlGrid);
+            }
+        } catch(e2) { console.log("Aviso: Falha ao inserir quadro de informações.", e2); }
 
-           var mestreDestacada = document.createElement('div');
-           mestreDestacada.className = 'preview-q-container';
-           mestreDestacada.style.cssText = 'background: #ffffff !important; border: 2px solid var(--primary) !important; border-radius: 12px !important; padding: 25px !important; margin-top: 40px !important; margin-bottom: 30px !important; box-shadow: 0 8px 20px rgba(212,175,55,0.15) !important; width: 100%; box-sizing: border-box;';
-           
-           mestreDestacada.innerHTML = '<h3 style="margin-top: 0; color: var(--sidebar-bg); border-bottom: 1px solid #E5E7EB; padding-bottom: 10px; margin-bottom: 25px; font-size: 1.3rem;">👤 Identificação do Aluno</h3>';
+        // -------------------------------------------------------------
+        // BLINDAGEM 3: Organizar Matrícula e WhatsApp lado a lado
+        // -------------------------------------------------------------
+        try {
+            var inputMat = document.getElementById('aluno_matricula');
+            var inputCont = document.getElementById('aluno_contato');
+            
+            if (inputMat && inputCont) {
+               inputMat.addEventListener('input', function() { buscarNomeAluno(this.value); });
+               var textoContato = (inputCont.type === 'email') ? 'E-mail' : 'WhatsApp';
 
-           var flexInputs = document.createElement('div');
-           flexInputs.style.cssText = 'display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 15px !important; align-items: flex-start !important; width: 100%; box-sizing: border-box;';
+               var mestreDestacada = document.createElement('div');
+               mestreDestacada.className = 'preview-q-container';
+               mestreDestacada.style.cssText = 'background: #ffffff !important; border: 2px solid var(--primary) !important; border-radius: 12px !important; padding: 25px !important; margin-top: 40px !important; margin-bottom: 30px !important; box-shadow: 0 8px 20px rgba(212,175,55,0.15) !important; width: 100%; box-sizing: border-box;';
+               
+               mestreDestacada.innerHTML = '<h3 style="margin-top: 0; color: var(--sidebar-bg); border-bottom: 1px solid #E5E7EB; padding-bottom: 10px; margin-bottom: 25px; font-size: 1.3rem;">👤 Identificação do Aluno</h3>';
 
-           var wrapMat = document.createElement('div');
-           wrapMat.style.cssText = 'margin: 0 !important; padding: 0 !important; box-sizing: border-box;';
-           wrapMat.innerHTML = '<label style="display:block; margin-bottom:8px; font-weight:bold; color:#4B5563;"><span style="color:#DC2626;">*</span> Matrícula:</label>';
-           inputMat.style.cssText = 'width: 100% !important; box-sizing: border-box !important; margin: 0 !important; font-family: inherit; font-size: 1rem; border-radius: 6px; border: 1px solid #D1D5DB; padding: 10px;';
-           wrapMat.appendChild(inputMat);
-           
-           var wrapCont = document.createElement('div');
-           wrapCont.style.cssText = 'margin: 0 !important; padding: 0 !important; box-sizing: border-box;';
-           wrapCont.innerHTML = '<label style="display:block; margin-bottom:8px; font-weight:bold; color:#4B5563;"><span style="color:#DC2626;">*</span> ' + textoContato + ':</label>';
-           inputCont.style.cssText = 'width: 100% !important; box-sizing: border-box !important; margin: 0 !important; font-family: inherit; font-size: 1rem; border-radius: 6px; border: 1px solid #D1D5DB; padding: 10px;';
-           wrapCont.appendChild(inputCont);
-           
-           flexInputs.appendChild(wrapMat);
-           flexInputs.appendChild(wrapCont);
-           mestreDestacada.appendChild(flexInputs);
-           
-           var divSaudacao = document.createElement('div');
-           divSaudacao.id = 'caixa-verde-saudacao'; 
-           divSaudacao.style.cssText = 'width: 100% !important; margin-top: 18px !important; text-align: left; display: none; transition: all 0.3s ease; box-sizing: border-box; border-top: 1px dashed #E5E7EB; padding-top: 12px;';
-           divSaudacao.innerHTML = '<p id="texto-nome-aluno" style="margin: 0; font-size:1.1rem;"></p>';
-           mestreDestacada.appendChild(divSaudacao);
-           
-           if (boxMatAntiga) { boxMatAntiga.parentNode.removeChild(boxMatAntiga); }
-           if (boxContAntiga && boxContAntiga.parentNode) { boxContAntiga.parentNode.removeChild(boxContAntiga); }
+               var flexInputs = document.createElement('div');
+               flexInputs.style.cssText = 'display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 15px !important; align-items: flex-start !important; width: 100%; box-sizing: border-box;';
 
-           var page0 = document.getElementById('page-0');
-           if (page0) {
-               var botoes = page0.getElementsByTagName('button');
-               if (botoes.length > 0) {
-                   var btnIniciar = botoes[botoes.length - 1];
-                   btnIniciar.innerText = "Iniciar";
-                   var refNode = btnIniciar;
-                   while (refNode.parentNode && refNode.parentNode !== page0) { refNode = refNode.parentNode; }
-                   if (refNode.parentNode === page0) page0.insertBefore(mestreDestacada, refNode);
-                   else page0.appendChild(mestreDestacada);
-               } else page0.appendChild(mestreDestacada);
-           }
-        }
+               var wrapMat = document.createElement('div');
+               wrapMat.style.cssText = 'margin: 0 !important; padding: 0 !important; box-sizing: border-box;';
+               wrapMat.innerHTML = '<label style="display:block; margin-bottom:8px; font-weight:bold; color:#4B5563;"><span style="color:#DC2626;">*</span> Matrícula:</label>';
+               inputMat.style.cssText = 'width: 100% !important; box-sizing: border-box !important; margin: 0 !important; font-family: inherit; font-size: 1rem; border-radius: 6px; border: 1px solid #D1D5DB; padding: 10px;';
+               wrapMat.appendChild(inputMat);
+               
+               var wrapCont = document.createElement('div');
+               wrapCont.style.cssText = 'margin: 0 !important; padding: 0 !important; box-sizing: border-box;';
+               wrapCont.innerHTML = '<label style="display:block; margin-bottom:8px; font-weight:bold; color:#4B5563;"><span style="color:#DC2626;">*</span> ' + textoContato + ':</label>';
+               inputCont.style.cssText = 'width: 100% !important; box-sizing: border-box !important; margin: 0 !important; font-family: inherit; font-size: 1rem; border-radius: 6px; border: 1px solid #D1D5DB; padding: 10px;';
+               wrapCont.appendChild(inputCont);
+               
+               flexInputs.appendChild(wrapMat);
+               flexInputs.appendChild(wrapCont);
+               mestreDestacada.appendChild(flexInputs);
+               
+               var divSaudacao = document.createElement('div');
+               divSaudacao.id = 'caixa-verde-saudacao'; 
+               divSaudacao.style.cssText = 'width: 100% !important; margin-top: 18px !important; text-align: left; display: none; transition: all 0.3s ease; box-sizing: border-box; border-top: 1px dashed #E5E7EB; padding-top: 12px;';
+               divSaudacao.innerHTML = '<p id="texto-nome-aluno" style="margin: 0; font-size:1.1rem;"></p>';
+               mestreDestacada.appendChild(divSaudacao);
+               
+               var boxMatAntiga = inputMat.closest('.preview-q-container');
+               var boxContAntiga = inputCont.closest('.preview-q-container');
+               if (boxMatAntiga && boxMatAntiga.parentNode) boxMatAntiga.parentNode.removeChild(boxMatAntiga);
+               if (boxContAntiga && boxContAntiga.parentNode) boxContAntiga.parentNode.removeChild(boxContAntiga);
 
-        var labels = container.getElementsByTagName('label');
-        for (var i = 0; i < labels.length; i++) {
-           if (labels[i].innerText.indexOf('restam 0 vagas') !== -1 || labels[i].innerText.indexOf('restam -') !== -1) {
-              labels[i].style.display = 'none';
-              var inpId = labels[i].getAttribute('for');
-              if (inpId) {
-                 var inp = document.getElementById(inpId);
-                 if (inp) inp.style.display = 'none';
-              }
-           } else {
-              for (var j = 0; j < labels[i].childNodes.length; j++) {
-                  var pedaco = labels[i].childNodes[j];
-                  if (pedaco.nodeType === 3 && pedaco.nodeValue.toLowerCase().indexOf('restam') !== -1) {
-                      pedaco.nodeValue = pedaco.nodeValue.split('|')[0].trim();
+               var page0 = document.getElementById('page-0');
+               if (page0) {
+                   var botoes = page0.getElementsByTagName('button');
+                   if (botoes.length > 0) {
+                       var btnIniciar = botoes[botoes.length - 1];
+                       btnIniciar.innerText = "Iniciar";
+                       var refNode = btnIniciar;
+                       while (refNode.parentNode && refNode.parentNode !== page0) refNode = refNode.parentNode;
+                       if (refNode.parentNode === page0) page0.insertBefore(mestreDestacada, refNode);
+                       else page0.appendChild(mestreDestacada);
+                   } else page0.appendChild(mestreDestacada);
+               }
+            }
+        } catch(e3) { console.log("Aviso: Falha ao organizar campos de identificação.", e3); }
+
+        // -------------------------------------------------------------
+        // BLINDAGEM 4: Ocultar texto das vagas esgotadas
+        // -------------------------------------------------------------
+        try {
+            var labels = container.getElementsByTagName('label');
+            for (var i = 0; i < labels.length; i++) {
+               if (labels[i].innerText.indexOf('restam 0 vagas') !== -1 || labels[i].innerText.indexOf('restam -') !== -1) {
+                  labels[i].style.display = 'none';
+                  var inpId = labels[i].getAttribute('for');
+                  if (inpId) {
+                     var inp = document.getElementById(inpId);
+                     if (inp) inp.style.display = 'none';
                   }
-              }
-           }
-        }
+               } else {
+                  for (var j = 0; j < labels[i].childNodes.length; j++) {
+                      var pedaco = labels[i].childNodes[j];
+                      if (pedaco.nodeType === 3 && pedaco.nodeValue.toLowerCase().indexOf('restam') !== -1) {
+                          pedaco.nodeValue = pedaco.nodeValue.split('|')[0].trim();
+                      }
+                  }
+               }
+            }
+        } catch(e4) { console.log("Aviso: Falha na limpeza das opções de agendamento.", e4); }
 
-        document.querySelectorAll('.preview-page').forEach(function(p){ p.classList.remove('active-page'); });
-        var page0Final = document.getElementById('page-0');
-        if(page0Final) page0Final.classList.add('active-page');
-        else if(document.getElementById('page-1')) document.getElementById('page-1').classList.add('active-page');
+        // -------------------------------------------------------------
+        // BLINDAGEM 5: Ativar a visualização correta da página
+        // -------------------------------------------------------------
+        try {
+            document.querySelectorAll('.preview-page').forEach(function(p){ p.classList.remove('active-page'); });
+            var page0Final = document.getElementById('page-0');
+            if(page0Final) page0Final.classList.add('active-page');
+            else if(document.getElementById('page-1')) document.getElementById('page-1').classList.add('active-page');
+        } catch(e5) { console.log("Aviso: Falha ao iniciar a página do formulário.", e5); }
 
       } catch (e) {
-          container.innerHTML = '<div style="text-align:center; padding:40px;"><h1 style="color:#DC2626;">⚠️ Erro</h1><p>Falha ao processar as perguntas.</p></div>';
+          console.error(e);
+          container.innerHTML = '<div style="text-align:center; padding:40px;"><h1 style="color:#DC2626;">⚠️ Erro Detalhado</h1><p>Houve uma falha ao abrir a prática.</p><p style="color:#4B5563; font-weight:bold;">Motivo Técnico: ' + e.message + '</p></div>';
       }
     }
 
@@ -332,7 +344,6 @@
 
       clearTimeout(timerBuscaMatricula);
       timerBuscaMatricula = setTimeout(function() {
-          // MÉTODO NOVO PARA GITHUB (fetch)
           fetch(API_URL + "?action=buscarNomeAlunoPorMatricula&matricula=" + matricula)
             .then(r => r.json())
             .then(nomeEncontrado => {
@@ -423,7 +434,6 @@
              var txtOrig = btn ? btn.innerText : "Iniciar";
              if (btn) { btn.innerText = "⏳ Verificando..."; btn.disabled = true; }
 
-             // MÉTODO NOVO PARA GITHUB (fetch)
              fetch(API_URL + "?action=verificarDuplicidadeBanco&id=" + idDoFormulario + "&matricula=" + matInput.value.trim())
                 .then(r => r.json())
                 .then(jaRespondeu => {
@@ -658,7 +668,6 @@
       var container = document.getElementById('conteudo-form');
       container.innerHTML = '<div style="text-align:center; padding: 60px;"><div class="emoji-animado">⏳</div><h2 style="color: var(--sidebar-bg); margin-top:20px;">Registrando sua prática...</h2></div>';
 
-      // MÉTODO NOVO PARA GITHUB (fetch POST)
       fetch(API_URL, {
           method: 'POST',
           body: JSON.stringify({action: 'salvarRespostaE_MandarEmail', dados: dadosParaOBackend})
@@ -722,5 +731,3 @@
       });
     }
   </script>
-</body>
-</html>
