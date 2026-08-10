@@ -1541,8 +1541,8 @@
        document.getElementById('modalCobrancaMassa').style.display = 'none';
     }
 
-    // ----------------------------------------------------------------------------------
-    // NOVA FICHA DE PRESENÇA INTELIGENTE E AGRUPADA
+// ----------------------------------------------------------------------------------
+    // NOVA FICHA DE PRESENÇA INTELIGENTE E AGRUPADA (CORRIGIDA)
     // ----------------------------------------------------------------------------------
     function renderizarFichaPresenca(dados) {
         const container = document.getElementById('fichas-container');
@@ -1568,18 +1568,18 @@
                 for (let pergunta in respostas) {
                     let resp = respostas[pergunta];
                     if (typeof resp === 'string') {
-                        // Verifica se a resposta tem o formato de agendamento (Ex: Dia 27/08/2026...)
-                        let matchSmart = resp.match(/Dia\s+(\d{2}\/(\d{2})\/\d{4})/);
-                        if (matchSmart) {
-                            // Extrai o texto ignorando a quantidade de vagas caso exista " | restam"
+                        // Procura qualquer resposta que contenha um padrão de data XX/XX/XXXX
+                        let matchData = resp.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                        if (matchData) {
+                            // Pega a resposta inteira (tirando a parte de vagas, se houver)
                             slotEscolhido = resp.split(' | ')[0].trim();
                             
                             const mesesMap = {
                                 "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril", "05": "Maio", "06": "Junho",
                                 "07": "Julho", "08": "Agosto", "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro"
                             };
-                            mesRef = mesesMap[matchSmart[2]] || "Não consta";
-                            break;
+                            mesRef = mesesMap[matchData[2]] || "Não consta";
+                            break; // Achou a data, interrompe o loop de busca
                         }
                     }
                 }
@@ -1597,7 +1597,7 @@
             let [slot, mesRef] = key.split('|||');
             let alunosGrupo = grupos[key];
             
-            // Juntar apenas os cursos dos alunos deste grupo específico para não ficar sujo
+            // Juntar apenas os cursos dos alunos deste grupo específico
             let cursosUnicosGrupo = [...new Set(alunosGrupo.map(a => a.curso))].join(", ");
             if(!cursosUnicosGrupo) cursosUnicosGrupo = "Não consta";
             
@@ -1608,9 +1608,9 @@
             alunosGrupo.forEach((aluno, idx) => {
                 tbodyHtml += `
                    <tr style="height: 25px;">
-                      <td style="font-size: 0.6rem; padding: 2px;">${idx + 1}</td>
+                      <td style="font-size: 0.6rem; padding: 2px; text-align: center;">${idx + 1}</td>
                       <td style="text-align:left; font-weight:bold; padding-left: 4px; font-size: 0.65rem;">${aluno.nome.toUpperCase()}</td>
-                      <td style="font-size: 0.6rem; padding: 2px;">${aluno.matricula}</td>
+                      <td style="font-size: 0.6rem; padding: 2px; text-align: center;">${aluno.matricula}</td>
                       <td></td> <td></td> <td></td> <td></td> <td></td> <td></td>
                    </tr>
                 `;
