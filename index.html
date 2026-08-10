@@ -405,12 +405,21 @@
     .btn-whats { background: #25D366; color: white; padding: 8px 14px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer; transition: all 0.2s; }
     .btn-whats:hover { background: #1EBE5D; transform: translateY(-1px); }
 
-    /* ESTILOS DA FICHA DE PRESENÇA */
-    .print-container { background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #ddd; margin-top: 15px; color: #000; font-family: Arial, sans-serif; }
+    /* ESTILOS DA FICHA DE PRESENÇA NOVO */
+    .print-container { background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #ddd; margin-top: 15px; margin-bottom: 25px; color: #000; font-family: Arial, sans-serif; }
     .print-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
     .print-title { text-align: right; flex: 1; }
-    .print-info-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 4px 15px; margin-bottom: 10px; font-size: 0.72rem; }
-    .print-info-grid div { border-bottom: 1px solid #aaa; padding-bottom: 1px; }
+    
+    .print-info-grid { 
+        display: grid; 
+        grid-template-columns: 1.5fr 1fr; 
+        gap: 6px 15px; 
+        margin-bottom: 12px; 
+        font-size: 0.75rem; 
+    }
+    .print-info-grid div { border-bottom: 1px solid #aaa; padding-bottom: 2px; }
+    .print-info-grid .full-row { grid-column: 1 / -1; }
+    
     .print-table { width: 100%; border-collapse: collapse; }
     .print-table th, .print-table td { border: 1px solid #000; padding: 2px; font-size: 0.65rem; text-align: center; }
     .print-table th { background: #f0f0f0; font-size: 0.68rem; font-weight: bold; }
@@ -418,11 +427,15 @@
     @media print {
        @page { size: landscape; margin: 10mm; }
        body * { visibility: hidden; }
-       #ficha-presenca, #ficha-presenca * { visibility: visible; }
-       #ficha-presenca { position: absolute; left: 0; top: 0; width: 100%; }
+       #fichas-container, #fichas-container * { visibility: visible; }
+       #fichas-container { position: absolute; left: 0; top: 0; width: 100%; }
        .no-print { display: none !important; }
        .main-content { overflow: visible; padding: 0; }
        .sidebar { display: none; }
+       
+       /* FORÇAR QUEBRA DE PÁGINA PARA CADA GRUPO */
+       .page-break { page-break-after: always; }
+       .page-break:last-child { page-break-after: auto; }
     }
   </style>
 </head>
@@ -460,10 +473,8 @@
       <div style="clear:both;"></div>
 
       <div class="card card-header active-card">
-        <!-- FONTE REDUZIDA AQUI (1.25rem) -->
         <h3 id="form-editor-title" style="margin-top:0; color:var(--sidebar-bg); border-bottom: 2px solid var(--border); padding-bottom:15px; font-weight: 800; font-size: 1.25rem;">📋 Criador de Formulário</h3>
         
-        <!-- 1. INFORMAÇÕES GERAIS -->
         <div class="wizard-section">
            <h4 class="wizard-title"><span class="wizard-badge">1</span> Informações Gerais </h4>
            <div class="form-group" style="margin-bottom: 20px;">
@@ -486,7 +497,6 @@
            </div>
         </div>
 
-        <!-- 2. CONFIGURAÇÃO DO LINK E COLETA -->
         <div class="wizard-section">
            <h4 class="wizard-title"><span class="wizard-badge">2</span> Configuração do Link e Coleta</h4>
            
@@ -499,7 +509,6 @@
              </div>
            </div>
 
-           <!-- NOVA ESTRUTURA: TURMAS (LISTA SUSPENSA) | BOTAO GERENCIAR | DATA LIMITE -->
            <div style="display: flex; gap: 15px; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap;">
              
               <div style="flex: 2; min-width: 250px;" class="custom-multiselect">
@@ -509,7 +518,6 @@
                      <span style="font-size: 0.8rem; color: var(--text-light);">▼</span>
                   </div>
                   <div class="multiselect-options" id="turmas-options-container" style="display:none; position:absolute; width: 100%; max-width: 400px; background:white; border:1px solid var(--border); border-radius:8px; max-height:220px; overflow-y:auto; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.1); padding:10px; margin-top: 5px;">
-                     <!-- Renderizado via JS -->
                   </div>
               </div>
               
@@ -532,7 +540,6 @@
            </div>
         </div>
 
-        <!-- 3. DIRETRIZES -->
         <div class="wizard-section">
            <h4 class="wizard-title"><span class="wizard-badge">3</span> Diretrizes e Regras OBRIGATÓRIAS</h4>
            <div class="form-group">
@@ -548,7 +555,6 @@
            </div>
         </div>
 
-        <!-- 4. ORIENTAÇÕES FINAIS -->
         <div class="wizard-section">
            <h4 class="wizard-title"><span class="wizard-badge">4</span> Orientações Finais (Opcional)</h4>
            <div class="form-group">
@@ -565,7 +571,6 @@
 
       </div>
 
-      <!-- 5. PERGUNTAS MANTIDAS NO MESMO LUGAR -->
       <div id="questions-container"></div>
       <button class="btn btn-outline" style="margin-bottom: 30px; border-radius: 8px;" onclick="addQuestion()">+ Adicionar Pergunta Personalizada</button>
       <button class="btn btn-secondary" style="width: 100%; font-size: 1.1rem; padding: 18px; border-radius: 10px;" onclick="salvarFormulario()">Salvar Formulário e Publicar Link</button>
@@ -574,11 +579,9 @@
     <!-- ABA: BANCO DE ALUNOS COM ATUALIZAÇÕES -->
     <div id="banco-alunos" class="tab-content">
       <div class="card">
-        <!-- FONTE REDUZIDA AQUI (1.5rem) -->
         <h1 style="color: var(--sidebar-bg); border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-top: 0; font-weight: 800; font-size: 1.5rem;">Gestão do Banco de Alunos (Turmas)</h1>
         <p style="color: var(--text-light); margin-top: -5px; margin-bottom: 25px;">Mantenha sua base atualizada. Os dados importados são salvos definitivamente no sistema.</p>
         
-        <!-- GRUPO ÚNICO DE BOTÕES DE AÇÃO -->
         <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 20px; justify-content: flex-end; flex-wrap: wrap;">
             <button class="btn btn-outline" style="color:#DC2626; border-color:#FCA5A5; background:#FEF2F2; padding: 12px 20px;" onclick="excluirTurmaVisual()">🗑️ Excluir Turma Selecionada</button>
             <button class="btn btn-outline" style="color:#DC2626; border-color:#FCA5A5; background:#FEF2F2; padding: 12px 20px;" onclick="limparTodosOsContatos()">🗑️ Excluir Todos</button>
@@ -586,13 +589,11 @@
             <button class="btn" style="padding: 12px 20px; background:#10B981; color: white;" onclick="document.getElementById('excel-upload').click()">📥 Importar</button>
         </div>
 
-        <!-- BARRA DE FILTROS E ORGANIZAÇÃO NA MESMA LINHA -->
         <div class="filter-bar" style="display: flex; gap: 40px; align-items: center; flex-wrap: wrap;">
           
           <div style="display:flex; align-items:center; gap: 10px; flex-wrap: nowrap;">
             <strong style="color: var(--sidebar-bg); font-size:1.05rem; white-space: nowrap;">🎯 Filtrar por Turma:</strong>
             <select id="filtro-turma-visual" class="filter-select" onchange="filtrarTabelaPorTurma(this.value)">
-               <!-- Opções geradas via JS baseadas nas turmas ativas -->
                <option value="Todas">Todas as Turmas (Misturado)</option>
             </select>
           </div>
@@ -629,7 +630,6 @@
 
     <div id="historico" class="tab-content">
       <div class="card">
-        <!-- FONTE REDUZIDA AQUI (1.5rem) -->
         <h1 style="color: var(--sidebar-bg); border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-top: 0; font-weight: 800; font-size: 1.5rem;">Histórico de Formulários</h1>
         <table id="tabela-historico">
           <thead><tr><th>Data Criação</th><th>Tema / Título</th><th>Data Limite</th><th>Status (Link de Acesso)</th><th>Ações</th></tr></thead>
@@ -640,7 +640,6 @@
     
     <div id="relatorios" class="tab-content">
       <div class="card">
-        <!-- FONTE REDUZIDA AQUI (1.5rem) -->
         <h1 style="color: var(--sidebar-bg); border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-top: 0; font-weight: 800; font-size: 1.5rem;">Resultados e Relatórios Individuais</h1>
         
         <div style="display: flex; gap: 15px; margin-bottom:25px; align-items: center;">
@@ -683,62 +682,13 @@
 
     <div id="ficha-presenca" class="tab-content">
        <div class="card no-print">
-          <!-- FONTE REDUZIDA AQUI (1.5rem) -->
-          <h1 style="color: var(--sidebar-bg); border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-top: 0; font-weight: 800; font-size: 1.5rem;">🖨️ Ficha de Presença Oficial</h1>
-          <p>Selecione um relatório na aba <strong>📊 Resultados</strong>. A Ficha de Presença vai puxar apenas os alunos que <strong>já responderam</strong> à prática.</p>
-          <button class="btn btn-secondary" onclick="window.print()" style="font-size: 1.1rem; padding: 15px 30px; border-radius: 8px;">🖨️ Imprimir Ficha de Presença</button>
+          <h1 style="color: var(--sidebar-bg); border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-top: 0; font-weight: 800; font-size: 1.5rem;">🖨️ Fichas de Presença (Por Horário)</h1>
+          <p>O sistema agora gera <strong>automaticamente uma ficha separada</strong> para cada turma/horário escolhido pelos alunos.</p>
+          <button class="btn btn-secondary" onclick="window.print()" style="font-size: 1.1rem; padding: 15px 30px; border-radius: 8px;">🖨️ Imprimir Fichas Geradas</button>
        </div>
 
-       <div id="area-impressao-ficha" class="print-container" style="display:none;">
-          <div class="print-header">
-             <div style="text-align:left;">
-                <h2 style="margin:0; font-size:1.3rem; font-weight: bold; color: #000;">Educ Centro de Ensino</h2>
-                <p style="margin:2px 0 0 0; font-size:0.75rem; color: #333;">Ficha Oficial de Chamada</p>
-             </div>
-             <div class="print-title">
-                <h3 style="margin:0; font-size:1.15rem; font-weight: 800; letter-spacing: 0.5px;">CONTROLE DE FREQUÊNCIA - PRÁTICAS</h3>
-             </div>
-          </div>
-
-          <div class="print-info-grid">
-             <div><strong>Unidade:</strong> Aracaju</div>
-             <div><strong>Dia:</strong> <span id="ficha-dia" style="font-weight: bold; text-transform: capitalize;"></span></div>
-             <div><strong>Professor(a):</strong> <span id="ficha-prof" style="font-weight: bold;"></span></div>
-             
-             <div><strong>Sala:</strong> <span id="ficha-sala" style="font-weight: bold;"></span></div>
-             <div><strong>Curso(s):</strong> <span id="ficha-curso" style="font-weight: bold;"></span></div>
-             <div><strong>Assunto:</strong> <span id="ficha-assunto" style="font-weight: bold;"></span></div>
-             
-             <div><strong>Horário:</strong> <span id="ficha-horario" style="font-weight: bold;"></span></div>
-             <div><strong>Data da Aula:</strong> <span id="ficha-data" style="font-weight: bold;"></span></div>
-             <div><strong>Mês Referência:</strong> <span id="ficha-mes" style="font-weight: bold; text-transform: capitalize;"></span></div>
-             
-             <div><strong>Período:</strong> <span id="ficha-periodo" style="font-weight: bold;"></span></div>
-             <div></div>
-             <div></div>
-          </div>
-
-          <table class="print-table">
-             <thead>
-                <tr>
-                   <th rowspan="2" style="width: 3%;">O/</th>
-                   <th rowspan="2" style="width: 25%;">ALUNO(A)</th>
-                   <th rowspan="2" style="width: 7%;">MATRÍCULA</th>
-                   <th rowspan="2" style="width: 45%;">ASSINATURA DO ALUNO(A)</th>
-                   <th colspan="5" style="width: 20%;">AVALIAÇÃO DOCENTE</th>
-                </tr>
-                <tr>
-                   <th style="width: 4%;">PA</th>
-                   <th style="width: 4%;">CP</th>
-                   <th style="width: 4%;">SO</th>
-                   <th style="width: 4%;">AU</th>
-                   <th style="width: 4%;">CO</th>
-                </tr>
-             </thead>
-             <tbody id="tbody-ficha-presenca">
-                </tbody>
-          </table>
-       </div>
+       <!-- AS FICHAS SERÃO INJETADAS AQUI PELO JS -->
+       <div id="fichas-container" style="display:none;"></div>
     </div>
 
   </div> 
@@ -747,16 +697,13 @@
   <div id="modalAddAluno" class="modal" style="background: rgba(0,0,0,0.6);">
     <div class="modal-form-content">
       <span class="close-modal" style="top:20px; right:20px;" onclick="document.getElementById('modalAddAluno').style.display='none'">&times;</span>
-      <!-- FONTE REDUZIDA AQUI -->
       <h2 id="modal-aluno-title" style="margin-top:0; color:var(--sidebar-bg); border-bottom: 2px solid var(--border); padding-bottom:15px; font-weight: 800; font-size: 1.5rem;">Adicionar Aluno Manual</h2>
       
       <div class="modal-grid-2">
          <div class="form-group"><label>Matrícula</label><input type="text" id="add-mat"></div>
          <div class="form-group">
             <label>Curso</label>
-            <select id="add-curso">
-               <!-- Opções geradas via JS baseadas nas turmas ativas -->
-            </select>
+            <select id="add-curso"></select>
          </div>
       </div>
       
@@ -790,7 +737,6 @@
     </div>
   </div>
 
-  <!-- NOVO MODAL: GERENCIAR TURMAS -->
   <div id="modalManageTurmas" class="modal" style="background: rgba(0,0,0,0.6);">
     <div class="modal-form-content" style="max-width: 500px;">
       <span class="close-modal" style="top:20px; right:20px;" onclick="document.getElementById('modalManageTurmas').style.display='none'">&times;</span>
@@ -804,7 +750,6 @@
       </div>
 
       <ul id="lista-turmas-gerenciar" style="list-style:none; padding:0; margin:0; max-height: 300px; overflow-y:auto; border: 1px solid var(--border); border-radius: 8px;">
-         <!-- A lista de turmas será gerada aqui pelo JS -->
       </ul>
     </div>
   </div>
@@ -850,7 +795,7 @@
 
   <script>
     // =========================================================================
-    // CONFIGURAÇÃO DA API (ATENÇÃO: PREENCHA OS LINKS ABAIXO)
+    // CONFIGURAÇÃO DA API
     // =========================================================================
     const API_URL = 'https://script.google.com/macros/s/AKfycbwo0rtQmGFQFEtu1Xgtth0TuKQ65QeMzhgiFGHAbLemPIEv8wpDxN37c_L4j3A2QhM/exec'; 
     const SITE_ALUNO_URL = 'https://pedagogicoeducensino-star.github.io/formulario/FormularioAluno.html';
@@ -871,19 +816,19 @@
       "Operador de Caixa", "Secretariado", "Telemarketing"
     ];
 
-window.addEventListener('DOMContentLoaded', () => {
-       verificarSessaoLogin();
-       renderizarDropdownTurmas(); 
-       
-       fetch(API_URL + "?action=buscarAlunos")
-           .then(r => r.json())
-           .then(renderizarBancoDeAlunos)
-           .catch(e => console.error("Erro ao buscar alunos", e));
-           
-       fetch(API_URL + "?action=buscarHistorico")
-           .then(r => r.json())
-           .then(renderizarHistorico)
-           .catch(e => console.error("Erro ao buscar histórico", e)); 
+    window.addEventListener('DOMContentLoaded', () => {
+        verificarSessaoLogin();
+        renderizarDropdownTurmas(); 
+        
+        fetch(API_URL + "?action=buscarAlunos")
+            .then(r => r.json())
+            .then(renderizarBancoDeAlunos)
+            .catch(e => console.error("Erro ao buscar alunos", e));
+            
+        fetch(API_URL + "?action=buscarHistorico")
+            .then(r => r.json())
+            .then(renderizarHistorico)
+            .catch(e => console.error("Erro ao buscar histórico", e)); 
     });
 
     document.addEventListener('click', function(e) {
@@ -896,7 +841,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     // ----------------------------------------------------------------------------------
-    // FUNÇÕES DE TURMAS (NOVO)
+    // FUNÇÕES DE TURMAS
     // ----------------------------------------------------------------------------------
     function renderizarDropdownTurmas() {
         const container = document.getElementById('turmas-options-container');
@@ -956,13 +901,11 @@ window.addEventListener('DOMContentLoaded', () => {
         const nome = input.value.trim();
         if(nome && !turmasDisponiveis.includes(nome)) {
             const checkedVal = Array.from(document.querySelectorAll('.form-turma-alvo:checked')).map(cb => cb.value);
-            
             turmasDisponiveis.push(nome);
             turmasDisponiveis.sort();
             input.value = '';
             renderizarListaGerenciarTurmas();
             renderizarDropdownTurmas();
-            
             document.querySelectorAll('.form-turma-alvo').forEach(cb => {
                 if(checkedVal.includes(cb.value)) cb.checked = true;
             });
@@ -975,11 +918,9 @@ window.addEventListener('DOMContentLoaded', () => {
     function removerTurma(index) {
         if(confirm(`Tem certeza que deseja remover a turma "${turmasDisponiveis[index]}" da lista de opções do sistema?`)) {
             const checkedVal = Array.from(document.querySelectorAll('.form-turma-alvo:checked')).map(cb => cb.value);
-            
             const removida = turmasDisponiveis.splice(index, 1)[0];
             renderizarListaGerenciarTurmas();
             renderizarDropdownTurmas();
-            
             document.querySelectorAll('.form-turma-alvo').forEach(cb => {
                 if(checkedVal.includes(cb.value) && cb.value !== removida) cb.checked = true;
             });
@@ -990,14 +931,12 @@ window.addEventListener('DOMContentLoaded', () => {
     function atualizarFiltrosGlobaisTurmas() {
         const filtroVis = document.getElementById('filtro-turma-visual');
         const addCurso = document.getElementById('add-curso');
-        
         if(filtroVis) {
            const valAtual = filtroVis.value;
            filtroVis.innerHTML = '<option value="Todas">Todas as Turmas (Misturado)</option>';
            turmasDisponiveis.forEach(t => filtroVis.innerHTML += `<option value="${t}">${t}</option>`);
            if(turmasDisponiveis.includes(valAtual) || valAtual === "Todas") filtroVis.value = valAtual;
         }
-
         if(addCurso) {
            const valAtual = addCurso.value;
            addCurso.innerHTML = '';
@@ -1085,7 +1024,6 @@ window.addEventListener('DOMContentLoaded', () => {
             alert("⚠️ Selecione uma turma específica na lista ao lado para poder excluí-la.");
             return;
         }
-        
         if (confirm(`ATENÇÃO: Você está prestes a excluir TODOS os alunos da turma "${turma}".\n\nDeseja realmente continuar? Esta ação não pode ser desfeita.`)) {
             const btn = document.querySelector('button[onclick="excluirTurmaVisual()"]');
             const textoOriginal = btn.innerText;
@@ -1144,29 +1082,22 @@ window.addEventListener('DOMContentLoaded', () => {
     function renderizarBancoDeAlunos(respostaJson) {
        const tbody = document.getElementById('tbody-banco-alunos');
        tbody.innerHTML = ''; 
-       
        const dados = typeof respostaJson === 'string' ? JSON.parse(respostaJson) : respostaJson;
-       
        if(dados.erro || !dados || dados.length === 0) {
           tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #999; padding: 30px;">Nenhum aluno cadastrado no banco de dados. Importe seu Excel ou Adicione Manualmente.</td></tr>`;
           return;
        }
-
        dados.forEach(linha => {
           if(!linha[0]) return; 
-          
           let mat = linha[0];
           let nome = linha[1];
           let curso = linha[2];
           let telStr = linha[3] || '';
           let horStr = linha[4] || '';
-          
           let telVisual = telStr.replace(/\n/g, '<br>') || 'Nenhum';
           let horVisual = horStr.replace(/\n/g, '<br>') || 'Nenhum';
-
           let tr = document.createElement('tr');
           tr.dataset.mat = mat; tr.dataset.nome = nome; tr.dataset.curso = curso; tr.dataset.tel = telStr; tr.dataset.hor = horStr;
-          
           tr.innerHTML = `
             <td>${mat}</td>
             <td style="font-weight:bold; color:var(--sidebar-bg);">${nome}</td>
@@ -1185,7 +1116,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     function editarAlunoBanco(trElement) {
         currentEditingMatricula = trElement.dataset.mat;
-        
         document.getElementById('modal-aluno-title').innerText = "Editar Aluno Cadastrado";
         document.getElementById('add-mat').value = trElement.dataset.mat;
         document.getElementById('add-nome').value = trElement.dataset.nome;
@@ -1211,20 +1141,16 @@ window.addEventListener('DOMContentLoaded', () => {
                 let partes = h.split(' - ');
                 let dia = partes[0] || "";
                 let hora = partes[1] || "";
-                
                 const div = document.createElement('div');
                 div.style = "display:flex; gap:10px;";
-                
                 let diaOptions = ['Segunda-Feira', 'Terça-Feira', 'Quarta-Feira', 'Quinta-Feira', 'Sexta-Feira', 'Sábado'];
                 let diaSelectHtml = `<select class="add-dia-input" style="flex:1; padding: 10px; border-radius: 8px;"><option value="">Selecione o Dia</option>`;
                 diaOptions.forEach(d => { diaSelectHtml += `<option ${d.toLowerCase() === dia.toLowerCase() ? 'selected' : ''}>${d}</option>`; });
                 diaSelectHtml += `</select>`;
-                
                 let horaOptions = ['07:00 às 09:00', '09:00 às 11:00', '11:00 às 13:00', '13:00 às 15:00', '15:00 às 17:00', '17:00 às 19:00'];
                 let horaSelectHtml = `<select class="add-hora-input" style="flex:1; padding: 10px; border-radius: 8px;"><option value="">Selecione o Horário</option>`;
                 horaOptions.forEach(hr => { horaSelectHtml += `<option ${hr === hora ? 'selected' : ''}>${hr}</option>`; });
                 horaSelectHtml += `</select>`;
-                
                 div.innerHTML = diaSelectHtml + horaSelectHtml + `<button class="btn btn-outline" style="padding:10px 15px; color:#EF4444; border-color:#FCA5A5; background:#FEF2F2; border-radius: 8px;" onclick="this.parentElement.remove()" title="Remover">🗑️</button>`;
                 horContainer.appendChild(div);
             });
@@ -1246,30 +1172,25 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----------------------------------------------------------------------------------
-    // HISTÓRICO DE FORMULÁRIOS E EDIÇÃO
+    // HISTÓRICO DE FORMULÁRIOS
     // ----------------------------------------------------------------------------------
     function renderizarHistorico(respostaJson) {
         const tbody = document.getElementById('tbody-historico');
         const selectRelat = document.getElementById('select-relatorio');
-        
         tbody.innerHTML = '';
         selectRelat.innerHTML = '<option value="">-- Selecione um formulário para ver o relatório --</option>';
-
         const dados = typeof respostaJson === 'string' ? JSON.parse(respostaJson) : respostaJson;
         if(!dados || dados.length === 0) {
             tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #999; padding: 30px;">Nenhum formulário criado ainda.</td></tr>`;
             return;
         }
-
         dados.forEach(form => {
             const linkGerado = SITE_ALUNO_URL + "?id=" + form.id;
-            
             let dataLimpada = form.dataCriacao;
             if (typeof dataLimpada === 'string' && dataLimpada.includes('GMT')) {
                 let d = new Date(dataLimpada);
                 if (!isNaN(d)) dataLimpada = d.toLocaleDateString('pt-BR');
             }
-            
             tbody.innerHTML += `<tr>
               <td>${dataLimpada}</td>
               <td style="font-weight:bold; color:var(--sidebar-bg);">${form.titulo}<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-light);">Turmas: ${form.turmas}</span></td>
@@ -1288,7 +1209,6 @@ window.addEventListener('DOMContentLoaded', () => {
                   <button class="btn btn-outline" style="padding: 5px 10px; font-size:0.85rem; color:#DC2626; border-color:#DC2626;" onclick="excluirFormulario('${form.id}')">🗑️</button>
               </td>
             </tr>`;
-            
             selectRelat.innerHTML += `<option value="${form.id}">${form.titulo} (${dataLimpada})</option>`;
         });
     }
@@ -1297,10 +1217,8 @@ window.addEventListener('DOMContentLoaded', () => {
         currentEditingFormId = formId;
         switchTab('nova-pratica', document.querySelectorAll('.menu-item')[0]);
         document.getElementById('form-editor-title').innerText = "✏️ Editando Formulário Existente";
-        
         const container = document.getElementById('questions-container');
         container.innerHTML = '<p style="color:#999; text-align:center; padding:30px;">⏳ Carregando estrutura da nuvem...</p>';
-        
         fetch(API_URL + "?action=buscarConfigFormulario&id=" + formId)
             .then(r => r.json())
             .then(resultadoJson => {
@@ -1311,78 +1229,45 @@ window.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('form-duracao').value = form.duracao || "";
                 document.getElementById('form-local').value = form.local || "";
                 document.getElementById('form-datalimite').value = form.prazoRaw || "";
-                
                 container.innerHTML = '';
-                
                 try {
                    let editData = null;
                    let decodedData = decodeURIComponent(form.jsonPerguntas || form.htmlProva);
-                   
-                   try {
-                      let rawParse = JSON.parse(decodedData);
-                      if(rawParse && rawParse.perguntas) editData = rawParse;
-                   } catch(e) {}
-
+                   try { let rawParse = JSON.parse(decodedData); if(rawParse && rawParse.perguntas) editData = rawParse; } catch(e) {}
                    if (!editData) {
                        let parser = new DOMParser();
                        let doc = parser.parseFromString(decodedData, 'text/html');
                        let hiddenDiv = doc.getElementById('form-edit-data-hidden');
-                       
                        if (hiddenDiv) {
                            let b64 = hiddenDiv.getAttribute('data-payload');
-                           if (b64) {
-                               editData = JSON.parse(decodeURIComponent(escape(atob(b64))));
-                           } else {
-                               let content = hiddenDiv.innerText || hiddenDiv.textContent;
-                               editData = JSON.parse(decodeURIComponent(content.trim()));
-                           }
+                           if (b64) { editData = JSON.parse(decodeURIComponent(escape(atob(b64)))); } 
+                           else { let content = hiddenDiv.innerText || hiddenDiv.textContent; editData = JSON.parse(decodeURIComponent(content.trim())); }
                        } else {
                            let matchScript = decodedData.match(/<script type="application\/json" id="form-edit-data">([\s\S]*?)<\/script>/);
-                           if (matchScript) {
-                               editData = JSON.parse(matchScript[1]);
-                           }
+                           if (matchScript) { editData = JSON.parse(matchScript[1]); }
                        }
                    }
-
                    if(editData) {
                        if(editData.desc) document.getElementById('form-desc').innerHTML = editData.desc;
                        if(editData.descFinal) document.getElementById('form-desc-final').innerHTML = editData.descFinal;
-
-                       if(editData.mode) {
-                          document.querySelectorAll('input[name="form-mode"]').forEach(radio => { if(radio.value === editData.mode) radio.checked = true; });
-                       }
-                       
-                       if(editData.contato) {
-                          document.querySelectorAll('input[name="form-contato"]').forEach(radio => { if(radio.value === editData.contato) radio.checked = true; });
-                       }
-
+                       if(editData.mode) { document.querySelectorAll('input[name="form-mode"]').forEach(radio => { if(radio.value === editData.mode) radio.checked = true; }); }
+                       if(editData.contato) { document.querySelectorAll('input[name="form-contato"]').forEach(radio => { if(radio.value === editData.contato) radio.checked = true; }); }
                        if(form.turmasArray) {
-                          form.turmasArray.forEach(t => {
-                             if(!turmasDisponiveis.includes(t)) { turmasDisponiveis.push(t); }
-                          });
+                          form.turmasArray.forEach(t => { if(!turmasDisponiveis.includes(t)) { turmasDisponiveis.push(t); } });
                           turmasDisponiveis.sort();
                           renderizarDropdownTurmas();
-                          
-                          document.querySelectorAll('.form-turma-alvo').forEach(cb => { 
-                              cb.checked = form.turmasArray.includes(cb.value); 
-                          });
+                          document.querySelectorAll('.form-turma-alvo').forEach(cb => { cb.checked = form.turmasArray.includes(cb.value); });
                           atualizarLabelTurmas(); 
                        }
-
                        if(editData.perguntas && editData.perguntas.length > 0) {
                           editData.perguntas.forEach(q => {
                               addQuestion();
                               let cards = document.querySelectorAll('.question-card'); 
                               let lastCard = cards[cards.length - 1];
-                              
                               lastCard.querySelector('.q-title').value = q.titulo;
                               lastCard.querySelector('.q-type').value = q.tipo;
-                              if(lastCard.querySelector('.q-required')) {
-                                 lastCard.querySelector('.q-required').checked = q.obrigatorio;
-                              }
-                              
+                              if(lastCard.querySelector('.q-required')) { lastCard.querySelector('.q-required').checked = q.obrigatorio; }
                               changeQuestionType(lastCard.querySelector('.q-type'));
-                              
                               if(['multiple', 'checkbox', 'dropdown'].includes(q.tipo) && q.opcoes) {
                                  let optContainer = lastCard.querySelector('.options-container');
                                  optContainer.innerHTML = '';
@@ -1399,7 +1284,7 @@ window.addEventListener('DOMContentLoaded', () => {
                                  });
                               } else if (q.tipo === 'short' && q.validacao) {
                                  lastCard.querySelector('.short-validation').value = q.validacao;
-                              } else if (q.tipo === 'linear') {
+                                 } else if (q.tipo === 'linear') {
                                  if(q.min) lastCard.querySelector('.lin-min').value = q.min;
                                  if(q.max) lastCard.querySelector('.lin-max').value = q.max;
                                  if(q.minLbl) lastCard.querySelector('.lin-min-label').value = q.minLbl;
@@ -1448,7 +1333,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----------------------------------------------------------------------------------
-    // RESULTADOS REALTIME E FICHA DE PRESENÇA
+    // RESULTADOS REALTIME E FICHA DE PRESENÇA (NOVA LÓGICA DE AGRUPAMENTO)
     // ----------------------------------------------------------------------------------
     function irParaRelatorio(formId) {
        switchTab('relatorios', document.getElementById('menu-resultados'));
@@ -1458,7 +1343,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     function buscarRelatorioRealtime(formId) {
         if(!formId) return;
-        
         const btn = document.querySelector('button[onclick*="buscarRelatorioRealtime"]');
         if(btn) { btn.innerText = "⏳ Cruzando Dados..."; btn.disabled = true; }
         
@@ -1484,7 +1368,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     function filtrarResultadosAlunos() {
        if(!dadosRelatorioGlobal) return;
-       
        const termo = document.getElementById('filtro-nome-matricula').value.toLowerCase();
        const statusFiltro = document.getElementById('filtro-status-resultado').value;
        
@@ -1493,14 +1376,12 @@ window.addEventListener('DOMContentLoaded', () => {
           const matchStatus = statusFiltro === "Todos" || aluno.status === statusFiltro;
           return matchTexto && matchStatus;
        });
-
        renderizarRelatorioRealtime(alunosFiltrados);
     }
 
     function renderizarRelatorioRealtime(arrayAlunos) {
         const tbody = document.getElementById('tbody-resultados');
         tbody.innerHTML = '';
-        
         document.getElementById('dash-total').innerText = dadosRelatorioGlobal.metricas.total;
         document.getElementById('dash-agendados').innerText = dadosRelatorioGlobal.metricas.respondidos;
         document.getElementById('dash-pendentes').innerText = dadosRelatorioGlobal.metricas.pendentes;
@@ -1512,21 +1393,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
         arrayAlunos.forEach(aluno => {
              let btnWhatsHtml = "";
-             
              if (aluno.status === "Pendente") {
                  let telefones = (aluno.telefone || '').split('\n');
                  let contatosValidos = [];
-                 
                  telefones.forEach(tel => {
                      let zap = tel.replace(/\D/g, '');
                      if (zap.length > 11) zap = zap.substring(0, 11);
-                     if (zap.length === 11 || zap.length === 10) {
-                         contatosValidos.push(zap);
-                     }
+                     if (zap.length === 11 || zap.length === 10) contatosValidos.push(zap);
                  });
-                 
                  let msg = encodeURIComponent(`Olá ${aluno.nome.split(' ')[0]}, tudo bem? Não se esqueça de responder seu formulário da prática profissional: ${dadosRelatorioGlobal.tituloForm}!`);
-                 
                  if (contatosValidos.length === 0) {
                     btnWhatsHtml = `<span style="color:#999; font-size:0.8rem;">Sem Nº Válido</span>`;
                  } else if (contatosValidos.length === 1) {
@@ -1567,17 +1442,13 @@ window.addEventListener('DOMContentLoaded', () => {
     function abrirRespostasAluno(matricula) {
        const aluno = dadosRelatorioGlobal.alunos.find(a => a.matricula === matricula);
        if(!aluno) return;
-
        document.getElementById('respostas-aluno-nome').innerText = aluno.nome;
        document.getElementById('respostas-aluno-mat').innerText = aluno.matricula;
-
        let container = document.getElementById('respostas-aluno-conteudo');
-       
        let dataEnvio = aluno.dataResposta && aluno.dataResposta !== '--/--/----' ? aluno.dataResposta : 'Data de envio não registrada';
        container.innerHTML = `<div style="background:#ECFDF5; color:#065F46; padding:12px 15px; border-radius:8px; margin-bottom:20px; font-weight:bold; border: 1px solid #A7F3D0; display:flex; align-items:center; gap:8px;">
           <span style="font-size:1.2rem;">📅</span> Respondido em: ${dataEnvio}
        </div>`;
-
        try {
           const respostas = JSON.parse(aluno.respostasJson);
           if (Object.keys(respostas).length === 0) {
@@ -1592,34 +1463,24 @@ window.addEventListener('DOMContentLoaded', () => {
        } catch(e) {
           container.innerHTML = "<p style='color:red;'>Erro ao ler respostas salvas. Formato inválido.</p>";
        }
-
        document.getElementById('modalLerRespostas').style.display = 'flex';
     }
 
     // ----------------------------------------------------------------------------------
-    // FILA DE DISPARO WHATSAPP EM MASSA
+    // DISPARO WHATSAPP EM MASSA
     // ----------------------------------------------------------------------------------
     function abrirModalCobrancaMassa() {
-       if(!dadosRelatorioGlobal) {
-          alert("Selecione um formulário primeiro!");
-          return;
-       }
-
+       if(!dadosRelatorioGlobal) { alert("Selecione um formulário primeiro!"); return; }
        filaAlunosWhats = [];
-
        dadosRelatorioGlobal.alunos.forEach(aluno => {
           if(aluno.status === "Pendente") {
               let telefones = (aluno.telefone || '').split('\n');
               let contatosValidosAluno = [];
-
               telefones.forEach(tel => {
                   let zap = tel.replace(/\D/g, '');
                   if (zap.length > 11) zap = zap.substring(0, 11);
-                  if (zap.length === 11 || zap.length === 10) {
-                      contatosValidosAluno.push(zap);
-                  }
+                  if (zap.length === 11 || zap.length === 10) contatosValidosAluno.push(zap);
               });
-
               contatosValidosAluno.forEach((zap, index) => {
                   filaAlunosWhats.push({
                       nome: aluno.nome,
@@ -1630,14 +1491,11 @@ window.addEventListener('DOMContentLoaded', () => {
               });
           }
        });
-
        document.getElementById('qtd-pendentes-validos').innerText = filaAlunosWhats.length;
-       
        if(filaAlunosWhats.length === 0) {
           alert("Nenhum aluno pendente com número de WhatsApp válido encontrado nesta turma.");
           return;
        }
-
        document.getElementById('config-fila-whats').style.display = 'block';
        document.getElementById('execucao-fila-whats').style.display = 'none';
        document.getElementById('modalCobrancaMassa').style.display = 'flex';
@@ -1658,13 +1516,10 @@ window.addEventListener('DOMContentLoaded', () => {
           document.getElementById('btn-fila-acao').style.display = "none";
           return;
        }
-
        const item = filaAlunosWhats[indiceFilaWhats];
        document.getElementById('fila-contador-atual').innerText = indiceFilaWhats + 1;
-       
        let infoContato = item.totalContatos > 1 ? ` <span style="color:var(--secondary); font-size:0.9rem;">(Contato ${item.ordemContato} de ${item.totalContatos})</span>` : "";
        document.getElementById('fila-nome-atual').innerHTML = item.nome + infoContato;
-       
        const btn = document.getElementById('btn-fila-acao');
        btn.innerText = `Avançar para: ${item.nome.split(' ')[0]}`;
        btn.style.display = "flex";
@@ -1673,18 +1528,11 @@ window.addEventListener('DOMContentLoaded', () => {
     function enviarProximoFila() {
        const item = filaAlunosWhats[indiceFilaWhats];
        let zap = "55" + item.telefoneEnvio;
-
        const txtBase = document.getElementById('texto-mensagem-massa').value;
        const msg = encodeURIComponent(`Olá ${item.nome.split(' ')[0]}, ${txtBase}`);
-       
        const linkWhats = `whatsapp://send?phone=${zap}&text=${msg}`;
-       
-       if (janelaWhatsapp && !janelaWhatsapp.closed) {
-           janelaWhatsapp.close();
-       }
-       
+       if (janelaWhatsapp && !janelaWhatsapp.closed) { janelaWhatsapp.close(); }
        janelaWhatsapp = window.open(linkWhats, '_blank');
-       
        indiceFilaWhats++;
        prepararTelaFilaWhats();
     }
@@ -1694,134 +1542,130 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----------------------------------------------------------------------------------
-    // FICHA DE PRESENÇA
+    // NOVA FICHA DE PRESENÇA INTELIGENTE E AGRUPADA
     // ----------------------------------------------------------------------------------
     function renderizarFichaPresenca(dados) {
-        document.getElementById('area-impressao-ficha').style.display = 'block';
-
-        document.getElementById('ficha-prof').innerText = dados.professor || "Não consta";
-        document.getElementById('ficha-sala').innerText = dados.local || "Não consta";
-        document.getElementById('ficha-assunto').innerText = dados.tituloForm || "Não consta";
-        
-        let cursosUnicos = [...new Set(dados.alunos.map(a => a.curso))];
-        document.getElementById('ficha-curso').innerText = cursosUnicos.join(", ") || "Não consta";
-
-        const tbodyFicha = document.getElementById('tbody-ficha-presenca');
-        tbodyFicha.innerHTML = '';
+        const container = document.getElementById('fichas-container');
+        container.innerHTML = '';
+        container.style.display = 'block';
 
         let alunosRespondidos = dados.alunos.filter(a => a.status === 'Respondido');
 
         if(alunosRespondidos.length === 0) {
-           tbodyFicha.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; font-weight:bold;">Nenhum aluno respondeu a esta prática até o momento.</td></tr>';
-           document.getElementById('ficha-dia').innerText = "Não consta";
-           document.getElementById('ficha-mes').innerText = "Não consta";
-           document.getElementById('ficha-horario').innerText = "Não consta";
-           document.getElementById('ficha-data').innerText = "Não consta";
-           document.getElementById('ficha-periodo').innerText = "Não consta";
+           container.innerHTML = '<div class="print-container" style="text-align:center; padding:20px; font-weight:bold;">Nenhum aluno respondeu a esta prática até o momento.</div>';
            return;
         }
 
-        let dataPratica = "";
-        let diaSemana = "";
-        let mesReferencia = "";
-        let horarioPratica = "Não consta";
-        let periodoPratica = "Não consta";
+        // Dicionário para agrupar os alunos pelo horário selecionado
+        let grupos = {};
 
-        for (let aluno of alunosRespondidos) {
+        alunosRespondidos.forEach(aluno => {
+            let slotEscolhido = "Data e Horário não especificados/identificados no sistema";
+            let mesRef = "Não consta";
+            
             try {
                 let respostas = JSON.parse(aluno.respostasJson);
                 for (let pergunta in respostas) {
-                    let resposta = respostas[pergunta];
-                    if (typeof resposta === 'string') {
-                        let matchSmart = resposta.match(/Dia\s+(\d{2}\/\d{2}\/\d{4})\s*\(([^)]+)\)\s*–\s*das\s*([^|]+)/);
+                    let resp = respostas[pergunta];
+                    if (typeof resp === 'string') {
+                        // Verifica se a resposta tem o formato de agendamento (Ex: Dia 27/08/2026...)
+                        let matchSmart = resp.match(/Dia\s+(\d{2}\/(\d{2})\/\d{4})/);
                         if (matchSmart) {
-                            dataPratica = matchSmart[1];
-                            diaSemana = matchSmart[2];
-                            let horarioRaw = matchSmart[3].trim();
-                            if (horarioRaw.includes('|')) {
-                                horarioRaw = horarioRaw.split('|')[0].trim();
-                            }
-                            horarioPratica = horarioRaw;
+                            // Extrai o texto ignorando a quantidade de vagas caso exista " | restam"
+                            slotEscolhido = resp.split(' | ')[0].trim();
+                            
+                            const mesesMap = {
+                                "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril", "05": "Maio", "06": "Junho",
+                                "07": "Julho", "08": "Agosto", "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro"
+                            };
+                            mesRef = mesesMap[matchSmart[2]] || "Não consta";
                             break;
                         }
                     }
                 }
             } catch(e) {}
-            if (dataPratica) break;
-        }
+            
+            let key = slotEscolhido + "|||" + mesRef;
+            if(!grupos[key]) grupos[key] = [];
+            grupos[key].push(aluno);
+        });
 
-        if (!dataPratica && dados.prazo) {
-            let prazoStr = dados.prazo;
-            let matchData = prazoStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-            if (matchData) {
-                dataPratica = `${matchData[1]}/${matchData[2]}/${matchData[3]}`;
-            } else {
-                let matchDataISO = prazoStr.match(/(\d{4})-(\d{2})-(\d{2})/);
-                if (matchDataISO) {
-                    dataPratica = `${matchDataISO[3]}/${matchDataISO[2]}/${matchDataISO[1]}`;
-                }
-            }
-        }
+        // Monta uma ficha completa (nova página) para cada grupo de horário encontrado
+        let chavesOrdenadas = Object.keys(grupos).sort();
+        
+        chavesOrdenadas.forEach((key, index) => {
+            let [slot, mesRef] = key.split('|||');
+            let alunosGrupo = grupos[key];
+            
+            // Juntar apenas os cursos dos alunos deste grupo específico para não ficar sujo
+            let cursosUnicosGrupo = [...new Set(alunosGrupo.map(a => a.curso))].join(", ");
+            if(!cursosUnicosGrupo) cursosUnicosGrupo = "Não consta";
+            
+            // Ordenar alfabeticamente
+            alunosGrupo.sort((a, b) => a.nome.localeCompare(b.nome));
+            
+            let tbodyHtml = '';
+            alunosGrupo.forEach((aluno, idx) => {
+                tbodyHtml += `
+                   <tr style="height: 25px;">
+                      <td style="font-size: 0.6rem; padding: 2px;">${idx + 1}</td>
+                      <td style="text-align:left; font-weight:bold; padding-left: 4px; font-size: 0.65rem;">${aluno.nome.toUpperCase()}</td>
+                      <td style="font-size: 0.6rem; padding: 2px;">${aluno.matricula}</td>
+                      <td></td> <td></td> <td></td> <td></td> <td></td> <td></td>
+                   </tr>
+                `;
+            });
 
-        const mesesMap = {
-            "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril", "05": "Maio", "06": "Junho",
-            "07": "Julho", "08": "Agosto", "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro"
-        };
+            // Estrutura HTML de cada Ficha
+            let fichaHtml = `
+            <div class="print-container ${index < chavesOrdenadas.length - 1 ? 'page-break' : ''}">
+              <div class="print-header">
+                 <div style="text-align:left;">
+                    <h2 style="margin:0; font-size:1.3rem; font-weight: bold; color: #000;">Educ Centro de Ensino</h2>
+                    <p style="margin:2px 0 0 0; font-size:0.75rem; color: #333;">Ficha Oficial de Chamada</p>
+                 </div>
+                 <div class="print-title">
+                    <h3 style="margin:0; font-size:1.15rem; font-weight: 800; letter-spacing: 0.5px;">CONTROLE DE FREQUÊNCIA</h3>
+                 </div>
+              </div>
 
-        const diasSemanaMap = {
-            0: "Domingo", 1: "Segunda-feira", 2: "Terça-feira", 3: "Quarta-feira", 4: "Quinta-feira", 5: "Sexta-feira", 6: "Sábado"
-        };
+              <div class="print-info-grid">
+                 <div><strong>Unidade:</strong> Aracaju</div>
+                 <div><strong>Professor(a):</strong> <span style="font-weight: bold;">${dados.professor || "Não consta"}</span></div>
+                 
+                 <div class="full-row"><strong>Sala:</strong> <span style="font-weight: bold;">${dados.local || "Não consta"}</span></div>
+                 
+                 <div><strong>Curso(s):</strong> <span style="font-weight: bold;">${cursosUnicosGrupo}</span></div>
+                 <div><strong>Temática da Aula:</strong> <span style="font-weight: bold;">${dados.tituloForm || "Não consta"}</span></div>
+                 
+                 <div><strong>Data e Horário da Aula:</strong> <span style="font-weight: bold;">${slot}</span></div>
+                 <div><strong>Mês Referência:</strong> <span style="font-weight: bold;">${mesRef}</span></div>
+              </div>
 
-        if (dataPratica) {
-            let partes = dataPratica.split('/');
-            let dia = partes[0];
-            let mesNum = partes[1];
-            let ano = partes[2];
-
-            mesReferencia = mesesMap[mesNum] || "Não consta";
-
-            if (!diaSemana) {
-                let dataObj = new Date(`${ano}-${mesNum}-${dia}T12:00:00`); 
-                if (!isNaN(dataObj)) {
-                    diaSemana = diasSemanaMap[dataObj.getDay()];
-                }
-            }
-        }
-
-        let startHour = -1;
-        if (horarioPratica && horarioPratica !== "Não consta") {
-            let matchHour = horarioPratica.match(/(\d{2}):(\d{2})/);
-            if (matchHour) {
-                startHour = parseInt(matchHour[1]);
-            }
-        }
-        if (startHour !== -1) {
-            if (startHour < 12) {
-                periodoPratica = "Matutino";
-            } else if (startHour >= 12 && startHour < 18) {
-                periodoPratica = "Vespertino";
-            } else {
-                periodoPratica = "Noturno";
-            }
-        }
-
-        document.getElementById('ficha-dia').innerText = diaSemana || "Não consta";
-        document.getElementById('ficha-mes').innerText = mesReferencia || "Não consta";
-        document.getElementById('ficha-horario').innerText = horarioPratica || "Não consta";
-        document.getElementById('ficha-data').innerText = dataPratica || "Não consta";
-        document.getElementById('ficha-periodo').innerText = periodoPratica || "Não consta";
-
-        let alunosOrdenados = alunosRespondidos.sort((a, b) => a.nome.localeCompare(b.nome));
-
-        alunosOrdenados.forEach((aluno, index) => {
-            tbodyFicha.innerHTML += `
-               <tr style="height: 25px;">
-                  <td style="font-size: 0.6rem; padding: 2px;">${index + 1}</td>
-                  <td style="text-align:left; font-weight:bold; padding-left: 4px; font-size: 0.65rem;">${aluno.nome.toUpperCase()}</td>
-                  <td style="font-size: 0.6rem; padding: 2px;">${aluno.matricula}</td>
-                  <td></td> <td></td> <td></td> <td></td> <td></td> <td></td>
-               </tr>
+              <table class="print-table">
+                 <thead>
+                    <tr>
+                       <th rowspan="2" style="width: 3%;">O/</th>
+                       <th rowspan="2" style="width: 25%;">ALUNO(A)</th>
+                       <th rowspan="2" style="width: 7%;">MATRÍCULA</th>
+                       <th rowspan="2" style="width: 45%;">ASSINATURA DO ALUNO(A)</th>
+                       <th colspan="5" style="width: 20%;">AVALIAÇÃO DOCENTE</th>
+                    </tr>
+                    <tr>
+                       <th style="width: 4%;">PA</th>
+                       <th style="width: 4%;">CP</th>
+                       <th style="width: 4%;">SO</th>
+                       <th style="width: 4%;">AU</th>
+                       <th style="width: 4%;">CO</th>
+                    </tr>
+                 </thead>
+                 <tbody>
+                    ${tbodyHtml}
+                 </tbody>
+              </table>
+            </div>
             `;
+            container.innerHTML += fichaHtml;
         });
     }
 
@@ -1832,11 +1676,9 @@ window.addEventListener('DOMContentLoaded', () => {
        const rows = document.querySelectorAll("#tabela-alunos-db tbody tr");
        const normalizar = (t) => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ' ').replace(/ em /g, ' de ').trim();
        const turmaFiltroNorm = normalizar(turmaEscolhida);
-
        rows.forEach(row => {
           if (row.cells.length < 3) return; 
           const cursoAluno = normalizar(row.cells[2].innerText);
-          
           if (turmaEscolhida === "Todas" || cursoAluno === turmaFiltroNorm) {
              row.style.display = ""; 
           } else {
@@ -1850,15 +1692,11 @@ window.addEventListener('DOMContentLoaded', () => {
       const tbody = table.querySelector("tbody");
       const rows = Array.from(tbody.querySelectorAll("tr"));
       if(rows.length === 0 || rows[0].cells.length < 3) return;
-
       const diasMap = { "segunda": 1, "terça": 2, "terca": 2, "quarta": 3, "quinta": 4, "sexta": 5, "sábado": 6, "sabado": 6, "domingo": 7 };
-
       rows.sort((a, b) => {
         const valA = a.cells[colIndex].innerText.trim().toLowerCase();
         const valB = b.cells[colIndex].innerText.trim().toLowerCase();
-        
         if (colIndex === 0) return (parseInt(valA) || 0) - (parseInt(valB) || 0);
-        
         if (colIndex === 4) {
            const getSortValue = (str) => {
               if(!str || str === 'nenhum') return "9-99:99";
@@ -1874,7 +1712,6 @@ window.addEventListener('DOMContentLoaded', () => {
            };
            return getSortValue(valA).localeCompare(getSortValue(valB));
         }
-        
         return valA.localeCompare(valB);
       });
       rows.forEach(row => tbody.appendChild(row));
@@ -1886,7 +1723,6 @@ window.addEventListener('DOMContentLoaded', () => {
     function processarExcelReal(input) {
       const file = input.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = function(e) {
         const data = new Uint8Array(e.target.result);
@@ -1897,15 +1733,12 @@ window.addEventListener('DOMContentLoaded', () => {
         
         let alunosParaSalvarNoBanco = [];
         let turmaIdentificada = ""; 
-
         for (let i = 1; i < rows.length; i++) {
           const row = rows[i];
           if (!row || row.length === 0 || !row[0]) continue; 
-
           const mat = row[0] || '';
           const nome = row[1] || '';
           const curso = row[2] || '';
-          
           if (!turmaIdentificada && curso) turmaIdentificada = curso; 
           
           let tels = []; 
@@ -1913,26 +1746,20 @@ window.addEventListener('DOMContentLoaded', () => {
           if (row[4]) tels.push(row[4]); 
           if (row[5]) tels.push(row[5]);
           const telStr = tels.join('\n'); 
-
           let hors = []; 
           if (row[6]) hors.push(row[6]); 
           if (row[7]) hors.push(row[7]); 
           if (row[8]) hors.push(row[8]);
           const horStr = hors.join('\n');
-
           alunosParaSalvarNoBanco.push([mat, nome, curso, telStr, horStr]);
         }
-        
         if (alunosParaSalvarNoBanco.length === 0) {
             alert("⚠️ Nenhum aluno válido encontrado nesta planilha.");
             input.value = "";
             return;
         }
-
         if (confirm(`ATENÇÃO! O sistema identificou a turma: "${turmaIdentificada}".\n\nEssa nova importação irá EXCLUIR todos os alunos já cadastrados anteriormente dessa turma para fazer uma atualização geral.\n\nDeseja continuar?`)) {
-            
             document.getElementById('tbody-banco-alunos').innerHTML = `<tr><td colspan="6" style="text-align: center; color: #999; padding: 30px;">⏳ Substituindo todos os alunos da turma ${turmaIdentificada}... Isso pode demorar alguns segundos.</td></tr>`;
-
             fetch(API_URL, {
                 method: 'POST',
                 body: JSON.stringify({action: 'substituirTurma', nomeTurma: turmaIdentificada, matrizAlunos: alunosParaSalvarNoBanco})
@@ -1947,7 +1774,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 fetch(API_URL + "?action=buscarAlunos").then(r => r.json()).then(renderizarBancoDeAlunos);
             });
         }
-
         input.value = ""; 
       };
       reader.readAsArrayBuffer(file);
@@ -2003,7 +1829,6 @@ window.addEventListener('DOMContentLoaded', () => {
       const horStrParaPlanilha = horarios.join('\n');
       
       if(!mat || !nome) { alert("Preencha ao menos Matrícula e Nome!"); return; }
-      
       const param = { mat: mat, nome: nome, curso: curso, telefones: telStrParaPlanilha, horarios: horStrParaPlanilha, matOriginal: currentEditingMatricula }; 
       
       fetch(API_URL, {
