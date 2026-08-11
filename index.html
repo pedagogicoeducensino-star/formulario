@@ -1541,8 +1541,8 @@
        document.getElementById('modalCobrancaMassa').style.display = 'none';
     }
 
-// ----------------------------------------------------------------------------------
-    // NOVA FICHA DE PRESENÇA (COPIA EXATAMENTE A OPÇÃO DO FORMULÁRIO)
+    // ----------------------------------------------------------------------------------
+    // NOVA FICHA DE PRESENÇA CORRIGIDA E MELHORADA
     // ----------------------------------------------------------------------------------
     function renderizarFichaPresenca(dados) {
         const container = document.getElementById('fichas-container');
@@ -1556,12 +1556,11 @@
            return;
         }
 
-        // Dicionário para agrupar os alunos pelo horário selecionado
+        // Dicionário para agrupar os alunos pelos horários selecionados
         let grupos = {};
 
         alunosRespondidos.forEach(aluno => {
-            let slotEscolhido = "Data/Horário não identificados (Verifique as respostas)";
-            let mesRef = "Não consta";
+            let slotsEncontrados = [];
             
             try {
                 let respostas = JSON.parse(aluno.respostasJson);
@@ -1569,31 +1568,47 @@
                     let respOriginal = respostas[pergunta];
                     if (!respOriginal) continue;
                     
-                    let resp = Array.isArray(respOriginal) ? respOriginal.join(", ") : String(respOriginal);
+                    // Trata as respostas como array (caso o aluno tenha marcado múltiplas caixas de seleção)
+                    let respostasArray = Array.isArray(respOriginal) ? respOriginal : [String(respOriginal)];
                     
-                    // Se a resposta contém uma data (XX/XX/XXXX) OU um formato de hora (XX:XX) OU a palavra "às"
-                    if (resp.match(/\d{2}\/\d{2}\/\d{4}/) || resp.match(/\d{2}:\d{2}/) || resp.includes(' às ')) {
-                        
-                        // Pega EXATAMENTE o texto da resposta, tirando apenas o aviso de vagas se existir
-                        slotEscolhido = resp.split(' | ')[0].trim();
-                        
-                        // Extrai o mês automaticamente da string que ele encontrou
-                        let matchData = slotEscolhido.match(/\d{2}\/(\d{2})\/\d{4}/);
-                        if (matchData) {
-                            const mesesMap = {
-                                "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril", "05": "Maio", "06": "Junho",
-                                "07": "Julho", "08": "Agosto", "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro"
-                            };
-                            mesRef = mesesMap[matchData[1]] || "Não consta";
-                        }
-                        break; // Achou a resposta de agendamento, para de procurar nas outras perguntas desse aluno
+                    // Verifica se ESSA pergunta é a pergunta de agendamento (contém datas ou horários)
+                    let isPerguntaAgendamento = respostasArray.some(r => 
+                        r.match(/\d{2}\/\d{2}\/\d{4}/) || r.match(/\d{2}:\d{2}/) || r.toLowerCase().includes(' às ') || r.toLowerCase().includes(' das ')
+                    );
+                    
+                    if (isPerguntaAgendamento) {
+                        respostasArray.forEach(resp => {
+                            let slotEscolhido = resp.split(' | ')[0].trim();
+                            let mesRef = "Não consta";
+                            
+                            let matchData = slotEscolhido.match(/\d{2}\/(\d{2})\/\d{4}/);
+                            if (matchData) {
+                                const mesesMap = {
+                                    "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril", "05": "Maio", "06": "Junho",
+                                    "07": "Julho", "08": "Agosto", "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro"
+                                };
+                                mesRef = mesesMap[matchData[1]] || "Não consta";
+                            }
+                            
+                            slotsEncontrados.push({ slot: slotEscolhido, mes: mesRef });
+                        });
+                        // Break interrompe a busca em outras perguntas e foca apenas nas datas marcadas aqui
+                        break; 
                     }
                 }
             } catch(e) {}
             
-            let key = slotEscolhido + "|||" + mesRef;
-            if(!grupos[key]) grupos[key] = [];
-            grupos[key].push(aluno);
+            // Se nenhuma pergunta combinou com a checagem de data e hora
+            if (slotsEncontrados.length === 0) {
+                slotsEncontrados.push({ slot: "Data/Horário não identificados (Verifique as respostas)", mes: "Não consta" });
+            }
+            
+            // ADICIONA O ALUNO EM TODAS AS FOLHAS (SLOTS) QUE ELE MARCOU INDIVIDUALMENTE
+            slotsEncontrados.forEach(item => {
+                let key = item.slot + "|||" + item.mes;
+                if(!grupos[key]) grupos[key] = [];
+                grupos[key].push(aluno);
+            });
         });
 
         // Monta uma ficha completa (nova página) para cada grupo de horário encontrado
