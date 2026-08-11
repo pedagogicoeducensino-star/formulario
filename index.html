@@ -1556,7 +1556,6 @@
            return;
         }
 
-        // Dicionário para agrupar os alunos pelos horários selecionados
         let grupos = {};
 
         alunosRespondidos.forEach(aluno => {
@@ -1564,46 +1563,96 @@
             
             try {
                 let respostas = JSON.parse(aluno.respostasJson);
-                for (let pergunta in respostas) {
-                    let respOriginal = respostas[pergunta];
-                    if (!respOriginal) continue;
+                let perguntaAgendamento = null;
+                
+                // 1. Tentar achar pelo Título da pergunta:
+                for (let p in respostas) {
+                    let pLower = p.toLowerCase();
+                    // Ignora perguntas pessoais
+                    if (pLower.includes('nome') || pLower.includes('matrícula') || pLower.includes('matricula') || pLower.includes('telefone') || pLower.includes('whatsapp') || pLower.includes('e-mail') || pLower.includes('email')) continue;
                     
-                    // Trata as respostas como array (caso o aluno tenha marcado múltiplas caixas de seleção)
-                    let respostasArray = Array.isArray(respOriginal) ? respOriginal : [String(respOriginal)];
-                    
-                    // Verifica se ESSA pergunta é a pergunta de agendamento (contém datas ou horários)
-                    let isPerguntaAgendamento = respostasArray.some(r => 
-                        r.match(/\d{2}\/\d{2}\/\d{4}/) || r.match(/\d{2}:\d{2}/) || r.toLowerCase().includes(' às ') || r.toLowerCase().includes(' das ')
-                    );
-                    
-                    if (isPerguntaAgendamento) {
-                        respostasArray.forEach(resp => {
-                            let slotEscolhido = resp.split(' | ')[0].trim();
-                            let mesRef = "Não consta";
-                            
-                            let matchData = slotEscolhido.match(/\d{2}\/(\d{2})\/\d{4}/);
-                            if (matchData) {
-                                const mesesMap = {
-                                    "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril", "05": "Maio", "06": "Junho",
-                                    "07": "Julho", "08": "Agosto", "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro"
-                                };
-                                mesRef = mesesMap[matchData[1]] || "Não consta";
-                            }
-                            
-                            slotsEncontrados.push({ slot: slotEscolhido, mes: mesRef });
-                        });
-                        // Break interrompe a busca em outras perguntas e foca apenas nas datas marcadas aqui
-                        break; 
+                    if (pLower.includes('dia') || pLower.includes('data') || pLower.includes('horário') || pLower.includes('horario') || pLower.includes('turno') || pLower.includes('turma') || pLower.includes('escolha') || pLower.includes('agendamento')) {
+                        perguntaAgendamento = p;
+                        break;
                     }
+                }
+                
+                // 2. Se não achou pelo título, tenta pelo conteúdo (procurando números ou datas)
+                if (!perguntaAgendamento) {
+                    for (let p in respostas) {
+                        let pLower = p.toLowerCase();
+                        if (pLower.includes('nome') || pLower.includes('matrícula') || pLower.includes('matricula') || pLower.includes('telefone') || pLower.includes('whatsapp') || pLower.includes('e-mail') || pLower.includes('email')) continue;
+                        
+                        let val = respostas[p];
+                        let strVal = Array.isArray(val) ? val.join(' ') : String(val);
+                        if (strVal.match(/\d{1,2}\/\d{1,2}/) || strVal.match(/\d{1,2}h/) || strVal.match(/\d{1,2}:\d{1,2}/) || strVal.toLowerCase().includes(' às ') || strVal.toLowerCase().includes(' das ')) {
+                            perguntaAgendamento = p;
+                            break;
+                        }
+                    }
+                }
+                
+                // 3. Fallback Máximo: Pega a primeira resposta que não seja dado pessoal
+                if (!perguntaAgendamento) {
+                    for (let p in respostas) {
+                        let pLower = p.toLowerCase();
+                        if (!(pLower.includes('nome') || pLower.includes('matrícula') || pLower.includes('matricula') || pLower.includes('telefone') || pLower.includes('whatsapp') || pLower.includes('e-mail') || pLower.includes('email'))) {
+                            perguntaAgendamento = p;
+                            break;
+                        }
+                    }
+                }
+
+                if (perguntaAgendamento && respostas[perguntaAgendamento]) {
+                    let respOriginal = respostas[perguntaAgendamento];
+                    let respostasArray = [];
+                    
+                    if (Array.isArray(respOriginal)) {
+                        respostasArray = respOriginal;
+                    } else {
+                        let str = String(respOriginal);
+                        // Se o aluno escolheu mais de uma checkbox, o Forms separa por vírgula e espaço
+                        if (str.includes(', ')) {
+                            respostasArray = str.split(', ').map(s => s.trim());
+                        } else {
+                            respostasArray = [str];
+                        }
+                    }
+                    
+                    respostasArray.forEach(resp => {
+                        let slotEscolhido = resp.split(' | ')[0].trim();
+                        if(!slotEscolhido) slotEscolhido = "Opção marcada pelo aluno";
+                        
+                        let mesRef = "Não consta";
+                        let matchData = slotEscolhido.match(/\d{1,2}\/(\d{1,2})\/?(\d{2,4})?/);
+                        
+                        if (matchData) {
+                            const mesesMap = {
+                                "01": "Janeiro", "1": "Janeiro", "02": "Fevereiro", "2": "Fevereiro", 
+                                "03": "Março", "3": "Março", "04": "Abril", "4": "Abril", 
+                                "05": "Maio", "5": "Maio", "06": "Junho", "6": "Junho",
+                                "07": "Julho", "7": "Julho", "08": "Agosto", "8": "Agosto", 
+                                "09": "Setembro", "9": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro"
+                            };
+                            mesRef = mesesMap[matchData[1]] || "Não consta";
+                        } else {
+                            const mesesExtenso = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+                            for(let m of mesesExtenso) {
+                                if (slotEscolhido.toLowerCase().includes(m.toLowerCase())) {
+                                    mesRef = m; break;
+                                }
+                            }
+                        }
+                        
+                        slotsEncontrados.push({ slot: slotEscolhido, mes: mesRef });
+                    });
                 }
             } catch(e) {}
             
-            // Se nenhuma pergunta combinou com a checagem de data e hora
             if (slotsEncontrados.length === 0) {
-                slotsEncontrados.push({ slot: "Data/Horário não identificados (Verifique as respostas)", mes: "Não consta" });
+                slotsEncontrados.push({ slot: "Nenhuma opção de turma/horário selecionada no form", mes: "Não consta" });
             }
             
-            // ADICIONA O ALUNO EM TODAS AS FOLHAS (SLOTS) QUE ELE MARCOU INDIVIDUALMENTE
             slotsEncontrados.forEach(item => {
                 let key = item.slot + "|||" + item.mes;
                 if(!grupos[key]) grupos[key] = [];
@@ -1611,18 +1660,15 @@
             });
         });
 
-        // Monta uma ficha completa (nova página) para cada grupo de horário encontrado
         let chavesOrdenadas = Object.keys(grupos).sort();
         
         chavesOrdenadas.forEach((key, index) => {
             let [slot, mesRef] = key.split('|||');
             let alunosGrupo = grupos[key];
             
-            // Juntar apenas os cursos dos alunos deste grupo específico
             let cursosUnicosGrupo = [...new Set(alunosGrupo.map(a => a.curso))].join(", ");
             if(!cursosUnicosGrupo) cursosUnicosGrupo = "Não consta";
             
-            // Ordenar alfabeticamente
             alunosGrupo.sort((a, b) => a.nome.localeCompare(b.nome));
             
             let tbodyHtml = '';
@@ -1637,7 +1683,6 @@
                 `;
             });
 
-            // Estrutura HTML de cada Ficha
             let fichaHtml = `
             <div class="print-container ${index < chavesOrdenadas.length - 1 ? 'page-break' : ''}">
               <div class="print-header">
@@ -1659,7 +1704,7 @@
                  <div><strong>Curso(s):</strong> <span style="font-weight: bold;">${cursosUnicosGrupo}</span></div>
                  <div><strong>Temática da Aula:</strong> <span style="font-weight: bold;">${dados.tituloForm || "Não consta"}</span></div>
                  
-                 <div><strong>Data e Horário da Aula:</strong> <span style="font-weight: bold;">${slot}</span></div>
+                 <div><strong>Data e Horário da Aula (Turma/Opção):</strong> <span style="font-weight: bold;">${slot}</span></div>
                  <div><strong>Mês Referência:</strong> <span style="font-weight: bold;">${mesRef}</span></div>
               </div>
 
