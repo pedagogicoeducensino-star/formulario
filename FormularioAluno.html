@@ -705,8 +705,8 @@
                    textoWhats += chaveW.replace('*','').trim() + ": " + valW + "\n";
                }
 
-               var linkWhats = "https://api.whatsapp.com/send?phone=" + numLimpo + "&text=" + encodeURIComponent(textoWhats);
-               btnWhats = '<a href="' + linkWhats + '" target="_blank" class="btn" style="background:#25D366; color:white; text-decoration:none; display:inline-block; margin-top:10px; padding:15px 30px; border-radius:8px;">📱 Enviar recibo para o meu WhatsApp</a>';
+               var linkWhats = "whatsapp://send?phone=" + numLimpo + "&text=" + encodeURIComponent(textoWhats);
+btnWhats = '<a href="' + linkWhats + '" class="btn" style="background:#25D366; color:white; text-decoration:none; display:inline-block; margin-top:10px; padding:15px 30px; border-radius:8px;">📱 Enviar recibo pelo WhatsApp</a>';
             }
 
             var msgEmail = "";
