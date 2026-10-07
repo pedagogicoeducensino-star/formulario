@@ -204,24 +204,6 @@
         } catch(e1) { console.log("Aviso: Falha na limpeza visual.", e1); }
 
         try {
-            var htmlGrid = document.createElement('div');
-            htmlGrid.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #F9FAFB; border: 1px solid #E5E7EB; padding: 20px; border-radius: 12px; margin-top: 25px; margin-bottom: 25px; color: #4B5563; font-size: 0.95rem; box-shadow: 0 4px 6px rgba(0,0,0,0.02);';
-            htmlGrid.innerHTML = '<div><strong style="color:var(--sidebar-bg);">Instituição:</strong> Educ Centro de Ensino</div>' +
-                                 '<div><strong style="color:var(--sidebar-bg);">Duração da Aula:</strong> 2 horas</div>' +
-                                 '<div><strong style="color:var(--sidebar-bg);">Professor(a):</strong> Davi</div>' +
-                                 '<div><strong style="color:var(--sidebar-bg);">Data Limite:</strong> <span style="color:#DC2626; font-weight:bold;">' + prazoString + '</span></div>' +
-                                 '<div style="grid-column: 1 / -1;"><strong style="color:var(--sidebar-bg);">Local:</strong> Laboratório Boreal e Práticas Profissionalizantes - Sala das Práticas</div>';
-
-            var tituloH = container.querySelector('h1, h2, h3, h4');
-            if (tituloH && tituloH.parentNode) {
-                if (tituloH.nextSibling) tituloH.parentNode.insertBefore(htmlGrid, tituloH.nextSibling);
-                else tituloH.parentNode.appendChild(htmlGrid);
-            } else {
-                container.appendChild(htmlGrid);
-            }
-        } catch(e2) { console.log("Aviso: Falha ao inserir quadro de informações.", e2); }
-
-        try {
             var inputMat = document.getElementById('aluno_matricula');
             var inputCont = document.getElementById('aluno_contato');
             
@@ -705,7 +687,7 @@
                    textoWhats += chaveW.replace('*','').trim() + ": " + valW + "\n";
                }
 
-               var linkWhats = "whatsapp://send?phone=" + numLimpo + "&text=" + encodeURIComponent(textoWhats);
+               var linkWhats = "https://api.whatsapp.com/send?phone=" + numLimpo + "&text=" + encodeURIComponent(textoWhats);
 btnWhats = '<a href="' + linkWhats + '" class="btn" style="background:#25D366; color:white; text-decoration:none; display:inline-block; margin-top:10px; padding:15px 30px; border-radius:8px;">📱 Enviar recibo pelo WhatsApp</a>';
             }
 
