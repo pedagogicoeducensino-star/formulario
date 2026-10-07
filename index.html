@@ -59,12 +59,11 @@
       border-top: 8px solid var(--primary);
     }
     
-    /* FONTES REDUZIDAS */
     .login-box h2 {
       color: var(--sidebar-bg);
       margin-top: 0;
       margin-bottom: 8px;
-      font-size: 1.5rem; /* Reduzido de 1.8rem */
+      font-size: 1.5rem;
       font-weight: 800;
     }
     
@@ -91,7 +90,6 @@
       outline: none;
     }
     
-    /* SIDEBAR MODERNA */
     .sidebar {
       width: 260px;
       background-color: var(--sidebar-bg);
@@ -104,10 +102,9 @@
       flex-direction: column;
     }
     
-    /* FONTES REDUZIDAS */
     .sidebar h2 {
       text-align: center;
-      font-size: 1.05rem; /* Reduzido de 1.15rem */
+      font-size: 1.05rem;
       margin-top: 0;
       margin-bottom: 35px;
       padding: 0 20px;
@@ -186,11 +183,10 @@
       margin-bottom: 0;
     }
     
-    /* FONTES REDUZIDAS */
     .wizard-title {
       margin: 0 0 20px 0; 
       color: var(--sidebar-bg); 
-      font-size: 1.05rem; /* Reduzido de 1.15rem */
+      font-size: 1.05rem; 
       display: flex; 
       align-items: center; 
       gap: 10px;
@@ -239,9 +235,8 @@
       box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
     }
     
-    /* FONTES REDUZIDAS */
     input[type="text"].title-input {
-      font-size: 1.4rem; /* Reduzido de 1.6rem */
+      font-size: 1.4rem;
       font-weight: 800;
       border: none;
       border-bottom: 2px solid var(--border);
@@ -256,7 +251,6 @@
       box-shadow: none;
     }
     
-    /* BOTÕES */
     .btn {
       background-color: var(--primary);
       color: #3E271A;
@@ -350,7 +344,6 @@
     }
     #btn-subir:hover { background: var(--primary-hover); transform: translateY(-3px); }
 
-    /* MODAIS REFINADOS */
     .modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(62, 39, 26, 0.7); justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(4px);
@@ -405,7 +398,6 @@
     .btn-whats { background: #25D366; color: white; padding: 8px 14px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer; transition: all 0.2s; }
     .btn-whats:hover { background: #1EBE5D; transform: translateY(-1px); }
 
-    /* ESTILOS DA FICHA DE PRESENÇA NOVO */
     .print-container { background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #ddd; margin-top: 15px; margin-bottom: 25px; color: #000; font-family: Arial, sans-serif; }
     .print-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
     .print-title { text-align: right; flex: 1; }
@@ -433,7 +425,6 @@
        .main-content { overflow: visible; padding: 0; }
        .sidebar { display: none; }
        
-       /* FORÇAR QUEBRA DE PÁGINA PARA CADA GRUPO */
        .page-break { page-break-after: always; }
        .page-break:last-child { page-break-after: auto; }
     }
@@ -576,7 +567,6 @@
       <button class="btn btn-secondary" style="width: 100%; font-size: 1.1rem; padding: 18px; border-radius: 10px;" onclick="salvarFormulario()">Salvar Formulário e Publicar Link</button>
     </div>
 
-    <!-- ABA: BANCO DE ALUNOS COM ATUALIZAÇÕES -->
     <div id="banco-alunos" class="tab-content">
       <div class="card">
         <h1 style="color: var(--sidebar-bg); border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-top: 0; font-weight: 800; font-size: 1.5rem;">Gestão do Banco de Alunos (Turmas)</h1>
@@ -664,13 +654,13 @@
         </div>
 
         <div class="filter-bar" style="display:flex; gap:15px; margin-bottom: 20px;">
-           <input type="text" id="filtro-nome-matricula" placeholder="🔍 Buscar por Nome ou Matrícula..." style="flex:2;" onkeyup="filtrarResultadosAlunos()">
-           <select id="filtro-status-resultado" style="flex:1; padding: 12px; border-radius: 8px; border: 1px solid var(--border);" onchange="filtrarResultadosAlunos()">
+            <input type="text" id="filtro-nome-matricula" placeholder="🔍 Buscar por Nome ou Matrícula..." style="flex:2;" onkeyup="filtrarResultadosAlunos()">
+            <select id="filtro-status-resultado" style="flex:1; padding: 12px; border-radius: 8px; border: 1px solid var(--border);" onchange="filtrarResultadosAlunos()">
               <option value="Todos">Todos os Status</option>
               <option value="Respondido">Apenas Respondidos</option>
               <option value="Pendente">Apenas Pendentes</option>
-           </select>
-           <button class="btn btn-whats" style="padding: 12px 20px;" onclick="abrirModalCobrancaMassa()">📱 Cobrar Pendentes em Massa</button>
+            </select>
+            <button class="btn btn-whats" style="padding: 12px 20px;" onclick="abrirModalCobrancaMassa()">📱 Cobrar Pendentes em Massa</button>
         </div>
 
         <table id="tabela-resultados">
@@ -687,7 +677,6 @@
           <button class="btn btn-secondary" onclick="window.print()" style="font-size: 1.1rem; padding: 15px 30px; border-radius: 8px;">🖨️ Imprimir Fichas Geradas</button>
        </div>
 
-       <!-- AS FICHAS SERÃO INJETADAS AQUI PELO JS -->
        <div id="fichas-container" style="display:none;"></div>
     </div>
 
@@ -760,7 +749,7 @@
       <h2 style="margin-top:0; color:var(--sidebar-bg); border-bottom: 2px solid var(--border); padding-bottom:15px; font-weight: 800; font-size: 1.5rem;">📱 Disparo Assistido WhatsApp</h2>
       
       <div id="config-fila-whats">
-         <p style="color:var(--text-light); font-size:0.95rem; margin-bottom:25px;">Para evitar bloqueios de pop-up e do próprio WhatsApp, o sistema fará uma fila inteligente que abre o WhatsApp Desktop automaticamente. Digite sua mensagem abaixo:</p>
+         <p style="color:var(--text-light); font-size:0.95rem; margin-bottom:25px;">Para evitar bloqueios de pop-up e do próprio WhatsApp, o sistema fará uma fila inteligente que abre o WhatsApp Web/App automaticamente. Digite sua mensagem abaixo:</p>
          
          <label style="text-align:left;">Mensagem de Cobrança (O nome do aluno será adicionado no início):</label>
          <textarea id="texto-mensagem-massa" style="height:120px; font-family:inherit; resize:none; border-radius: 8px;">tudo bem? Não se esqueça de responder seu formulário da prática profissional!</textarea>
@@ -779,9 +768,9 @@
          </div>
          
          <button id="btn-fila-acao" class="btn btn-whats" style="width:100%; padding:20px; justify-content:center; font-size:1.2rem; margin-bottom:15px;" onclick="enviarProximoFila()">
-             Abrir WhatsApp Web
+             Abrir Conversa no WhatsApp
          </button>
-         <p style="font-size:0.85rem; color:var(--text-light);">O aplicativo instalado abrirá a conversa com o texto pronto. Envie a mensagem e clique no botão acima para ir para o próximo contato.</p>
+         <p style="font-size:0.85rem; color:var(--text-light);">O WhatsApp abrirá a conversa com o texto pronto. Envie a mensagem e clique no botão acima para ir para o próximo contato.</p>
       </div>
     </div>
   </div>
@@ -794,12 +783,8 @@
   </div>
 
   <script>
-    // =========================================================================
-    // CONFIGURAÇÃO DA API
-    // =========================================================================
     const API_URL = 'https://script.google.com/macros/s/AKfycbwo0rtQmGFQFEtu1Xgtth0TuKQ65QeMzhgiFGHAbLemPIEv8wpDxN37c_L4j3A2QhM/exec'; 
     const SITE_ALUNO_URL = 'https://pedagogicoeducensino-star.github.io/formulario/FormularioAluno.html';
-    // =========================================================================
 
     let currentEditingFormId = null;
     let currentEditingMatricula = null;
@@ -840,9 +825,6 @@
         }
     });
 
-    // ----------------------------------------------------------------------------------
-    // FUNÇÕES DE TURMAS
-    // ----------------------------------------------------------------------------------
     function renderizarDropdownTurmas() {
         const container = document.getElementById('turmas-options-container');
         container.innerHTML = '';
@@ -1076,9 +1058,6 @@
         }
     }
 
-    // ----------------------------------------------------------------------------------
-    // BANCO DE ALUNOS
-    // ----------------------------------------------------------------------------------
     function renderizarBancoDeAlunos(respostaJson) {
        const tbody = document.getElementById('tbody-banco-alunos');
        tbody.innerHTML = ''; 
@@ -1171,9 +1150,6 @@
         }
     }
 
-    // ----------------------------------------------------------------------------------
-    // HISTÓRICO DE FORMULÁRIOS
-    // ----------------------------------------------------------------------------------
     function renderizarHistorico(respostaJson) {
         const tbody = document.getElementById('tbody-historico');
         const selectRelat = document.getElementById('select-relatorio');
@@ -1253,62 +1229,62 @@
                        if(editData.mode) { document.querySelectorAll('input[name="form-mode"]').forEach(radio => { if(radio.value === editData.mode) radio.checked = true; }); }
                        if(editData.contato) { document.querySelectorAll('input[name="form-contato"]').forEach(radio => { if(radio.value === editData.contato) radio.checked = true; }); }
                        if(form.turmasArray) {
-                          form.turmasArray.forEach(t => { if(!turmasDisponiveis.includes(t)) { turmasDisponiveis.push(t); } });
-                          turmasDisponiveis.sort();
-                          renderizarDropdownTurmas();
-                          document.querySelectorAll('.form-turma-alvo').forEach(cb => { cb.checked = form.turmasArray.includes(cb.value); });
-                          atualizarLabelTurmas(); 
+                        form.turmasArray.forEach(t => { if(!turmasDisponiveis.includes(t)) { turmasDisponiveis.push(t); } });
+                        turmasDisponiveis.sort();
+                        renderizarDropdownTurmas();
+                        document.querySelectorAll('.form-turma-alvo').forEach(cb => { cb.checked = form.turmasArray.includes(cb.value); });
+                        atualizarLabelTurmas(); 
                        }
                        if(editData.perguntas && editData.perguntas.length > 0) {
-                          editData.perguntas.forEach(q => {
-                              addQuestion();
-                              let cards = document.querySelectorAll('.question-card'); 
-                              let lastCard = cards[cards.length - 1];
-                              lastCard.querySelector('.q-title').value = q.titulo;
-                              lastCard.querySelector('.q-type').value = q.tipo;
-                              if(lastCard.querySelector('.q-required')) { lastCard.querySelector('.q-required').checked = q.obrigatorio; }
-                              changeQuestionType(lastCard.querySelector('.q-type'));
-                              if(['multiple', 'checkbox', 'dropdown'].includes(q.tipo) && q.opcoes) {
-                                 let optContainer = lastCard.querySelector('.options-container');
-                                 optContainer.innerHTML = '';
-                                 q.opcoes.forEach(op => {
-                                     if(op.isSmart) {
-                                        let div = document.createElement('div'); div.className = 'smart-slot';
-                                        div.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #FAD7A1; padding-bottom: 8px; margin-bottom: 10px;"><span class="smart-text-preview opt-val" data-value="${op.texto}">${op.texto}</span><button style="color:red; background:none; border:none; font-weight:bold; cursor:pointer;" onclick="this.closest('.smart-slot').remove()">X Remover</button></div><div class="smart-slot-inputs"><input type="date" class="smart-date" onchange="updateSmartText(this)" style="flex:2;"><input type="time" class="smart-start" onchange="updateSmartText(this)" style="flex:1.5;"> <span style="font-weight:bold; color:var(--text-light);">às</span> <input type="time" class="smart-end" onchange="updateSmartText(this)" style="flex:1.5;"><input type="number" class="smart-vacancies" placeholder="Vagas" style="flex:1;" onchange="updateSmartText(this)"></div>`;
-                                        optContainer.appendChild(div);
-                                     } else {
-                                        let div = document.createElement('div'); div.className = 'option-row';
-                                        div.innerHTML = `<span style="color:var(--text-light); width:20px;">○</span><input type="text" class="opt-val normal-opt" value="${op.texto}"><button style="color:red; background:none; border:none; cursor:pointer;" onclick="this.parentElement.remove()">X</button>`;
-                                        optContainer.appendChild(div);
-                                     }
-                                 });
-                              } else if (q.tipo === 'short' && q.validacao) {
-                                 lastCard.querySelector('.short-validation').value = q.validacao;
-                                 } else if (q.tipo === 'linear') {
-                                 if(q.min) lastCard.querySelector('.lin-min').value = q.min;
-                                 if(q.max) lastCard.querySelector('.lin-max').value = q.max;
-                                 if(q.minLbl) lastCard.querySelector('.lin-min-label').value = q.minLbl;
-                                 if(q.maxLbl) lastCard.querySelector('.lin-max-label').value = q.maxLbl;
-                              } else if (q.tipo === 'rating') {
-                                 if(q.max) lastCard.querySelector('.rating-max').value = q.max;
-                                 if(q.icon) lastCard.querySelector('.rating-icon').value = q.icon;
-                              } else if (q.tipo === 'grid') {
-                                 let rc = lastCard.querySelector('.rows-container');
-                                 let cc = lastCard.querySelector('.cols-container');
-                                 rc.innerHTML = ''; cc.innerHTML = '';
-                                 if(q.linhas) q.linhas.forEach(l => {
-                                    let div = document.createElement('div'); div.className = 'option-row'; div.innerHTML = `<input type="text" class="grid-row-val" value="${l}"><button style="color:red; background:none; border:none;" onclick="this.parentElement.remove()">X</button>`; rc.appendChild(div);
-                                 });
-                                 if(q.colunas) q.colunas.forEach(c => {
-                                    let div = document.createElement('div'); div.className = 'option-row'; div.innerHTML = `<input type="text" class="grid-col-val" value="${c}"><button style="color:red; background:none; border:none;" onclick="this.parentElement.remove()">X</button>`; cc.appendChild(div);
-                                 });
-                              }
-                          });
+                        editData.perguntas.forEach(q => {
+                            addQuestion();
+                            let cards = document.querySelectorAll('.question-card'); 
+                            let lastCard = cards[cards.length - 1];
+                            lastCard.querySelector('.q-title').value = q.titulo;
+                            lastCard.querySelector('.q-type').value = q.tipo;
+                            if(lastCard.querySelector('.q-required')) { lastCard.querySelector('.q-required').checked = q.obrigatorio; }
+                            changeQuestionType(lastCard.querySelector('.q-type'));
+                            if(['multiple', 'checkbox', 'dropdown'].includes(q.tipo) && q.opcoes) {
+                               let optContainer = lastCard.querySelector('.options-container');
+                               optContainer.innerHTML = '';
+                               q.opcoes.forEach(op => {
+                                   if(op.isSmart) {
+                                       let div = document.createElement('div'); div.className = 'smart-slot';
+                                       div.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #FAD7A1; padding-bottom: 8px; margin-bottom: 10px;"><span class="smart-text-preview opt-val" data-value="${op.texto}">${op.texto}</span><button style="color:red; background:none; border:none; font-weight:bold; cursor:pointer;" onclick="this.closest('.smart-slot').remove()">X Remover</button></div><div class="smart-slot-inputs"><input type="date" class="smart-date" onchange="updateSmartText(this)" style="flex:2;"><input type="time" class="smart-start" onchange="updateSmartText(this)" style="flex:1.5;"> <span style="font-weight:bold; color:var(--text-light);">às</span> <input type="time" class="smart-end" onchange="updateSmartText(this)" style="flex:1.5;"><input type="number" class="smart-vacancies" placeholder="Vagas" style="flex:1;" onchange="updateSmartText(this)"></div>`;
+                                       optContainer.appendChild(div);
+                                   } else {
+                                       let div = document.createElement('div'); div.className = 'option-row';
+                                       div.innerHTML = `<span style="color:var(--text-light); width:20px;">○</span><input type="text" class="opt-val normal-opt" value="${op.texto}"><button style="color:red; background:none; border:none; cursor:pointer;" onclick="this.parentElement.remove()">X</button>`;
+                                       optContainer.appendChild(div);
+                                   }
+                               });
+                            } else if (q.tipo === 'short' && q.validacao) {
+                               lastCard.querySelector('.short-validation').value = q.validacao;
+                            } else if (q.tipo === 'linear') {
+                               if(q.min) lastCard.querySelector('.lin-min').value = q.min;
+                               if(q.max) lastCard.querySelector('.lin-max').value = q.max;
+                               if(q.minLbl) lastCard.querySelector('.lin-min-label').value = q.minLbl;
+                               if(q.maxLbl) lastCard.querySelector('.lin-max-label').value = q.maxLbl;
+                            } else if (q.tipo === 'rating') {
+                               if(q.max) lastCard.querySelector('.rating-max').value = q.max;
+                               if(q.icon) lastCard.querySelector('.rating-icon').value = q.icon;
+                            } else if (q.tipo === 'grid') {
+                               let rc = lastCard.querySelector('.rows-container');
+                               let cc = lastCard.querySelector('.cols-container');
+                               rc.innerHTML = ''; cc.innerHTML = '';
+                               if(q.linhas) q.linhas.forEach(l => {
+                                let div = document.createElement('div'); div.className = 'option-row'; div.innerHTML = `<input type="text" class="grid-row-val" value="${l}"><button style="color:red; background:none; border:none;" onclick="this.parentElement.remove()">X</button>`; rc.appendChild(div);
+                               });
+                               if(q.colunas) q.colunas.forEach(c => {
+                                let div = document.createElement('div'); div.className = 'option-row'; div.innerHTML = `<input type="text" class="grid-col-val" value="${c}"><button style="color:red; background:none; border:none;" onclick="this.parentElement.remove()">X</button>`; cc.appendChild(div);
+                               });
+                            }
+                        });
                        } else { addQuestion(); }
                    } else { addQuestion(); }
                 } catch(e) { 
-                   console.error("Erro no parser da edição:", e); 
-                   addQuestion(); 
+                    console.error("Erro no parser da edição:", e); 
+                    addQuestion(); 
                 }
             })
             .catch(e => console.error(e));
@@ -1332,9 +1308,6 @@
         }
     }
 
-    // ----------------------------------------------------------------------------------
-    // RESULTADOS REALTIME E FICHA DE PRESENÇA (NOVA LÓGICA DE AGRUPAMENTO)
-    // ----------------------------------------------------------------------------------
     function irParaRelatorio(formId) {
        switchTab('relatorios', document.getElementById('menu-resultados'));
        document.getElementById('select-relatorio').value = formId;
@@ -1406,13 +1379,13 @@
                     btnWhatsHtml = `<span style="color:#999; font-size:0.8rem;">Sem Nº Válido</span>`;
                  } else if (contatosValidos.length === 1) {
                     let zap = "55" + contatosValidos[0];
-                    let linkApp = `whatsapp://send?phone=${zap}&text=${msg}`;
+                    let linkApp = `https://api.whatsapp.com/send?phone=${zap}&text=${msg}`;
                     btnWhatsHtml = `<a href="${linkApp}" target="_blank" class="btn-whats">💬 Cobrar</a>`;
                  } else {
                     btnWhatsHtml = `<div style="display:flex; flex-direction:column; gap:5px;">`;
                     contatosValidos.forEach((zapNum, idx) => {
                         let zap = "55" + zapNum;
-                        let linkApp = `whatsapp://send?phone=${zap}&text=${msg}`;
+                        let linkApp = `https://api.whatsapp.com/send?phone=${zap}&text=${msg}`;
                         btnWhatsHtml += `<a href="${linkApp}" target="_blank" class="btn-whats" style="padding: 4px 8px; font-size: 0.8rem; justify-content: center; white-space: nowrap;">💬 Cobrar (Nº ${idx + 1})</a>`;
                     });
                     btnWhatsHtml += `</div>`;
@@ -1466,9 +1439,6 @@
        document.getElementById('modalLerRespostas').style.display = 'flex';
     }
 
-    // ----------------------------------------------------------------------------------
-    // DISPARO WHATSAPP EM MASSA
-    // ----------------------------------------------------------------------------------
     function abrirModalCobrancaMassa() {
        if(!dadosRelatorioGlobal) { alert("Selecione um formulário primeiro!"); return; }
        filaAlunosWhats = [];
@@ -1530,7 +1500,7 @@
        let zap = "55" + item.telefoneEnvio;
        const txtBase = document.getElementById('texto-mensagem-massa').value;
        const msg = encodeURIComponent(`Olá ${item.nome.split(' ')[0]}, ${txtBase}`);
-       const linkWhats = `whatsapp://send?phone=${zap}&text=${msg}`;
+       const linkWhats = `https://api.whatsapp.com/send?phone=${zap}&text=${msg}`;
        if (janelaWhatsapp && !janelaWhatsapp.closed) { janelaWhatsapp.close(); }
        janelaWhatsapp = window.open(linkWhats, '_blank');
        indiceFilaWhats++;
@@ -1541,9 +1511,6 @@
        document.getElementById('modalCobrancaMassa').style.display = 'none';
     }
 
-    // ----------------------------------------------------------------------------------
-    // NOVA FICHA DE PRESENÇA CORRIGIDA E MELHORADA
-    // ----------------------------------------------------------------------------------
     function renderizarFichaPresenca(dados) {
         const container = document.getElementById('fichas-container');
         container.innerHTML = '';
@@ -1565,10 +1532,8 @@
                 let respostas = JSON.parse(aluno.respostasJson);
                 let perguntaAgendamento = null;
                 
-                // 1. Tentar achar pelo Título da pergunta:
                 for (let p in respostas) {
                     let pLower = p.toLowerCase();
-                    // Ignora perguntas pessoais
                     if (pLower.includes('nome') || pLower.includes('matrícula') || pLower.includes('matricula') || pLower.includes('telefone') || pLower.includes('whatsapp') || pLower.includes('e-mail') || pLower.includes('email')) continue;
                     
                     if (pLower.includes('dia') || pLower.includes('data') || pLower.includes('horário') || pLower.includes('horario') || pLower.includes('turno') || pLower.includes('turma') || pLower.includes('escolha') || pLower.includes('agendamento')) {
@@ -1577,7 +1542,6 @@
                     }
                 }
                 
-                // 2. Se não achou pelo título, tenta pelo conteúdo (procurando números ou datas)
                 if (!perguntaAgendamento) {
                     for (let p in respostas) {
                         let pLower = p.toLowerCase();
@@ -1592,7 +1556,6 @@
                     }
                 }
                 
-                // 3. Fallback Máximo: Pega a primeira resposta que não seja dado pessoal
                 if (!perguntaAgendamento) {
                     for (let p in respostas) {
                         let pLower = p.toLowerCase();
@@ -1611,7 +1574,6 @@
                         respostasArray = respOriginal;
                     } else {
                         let str = String(respOriginal);
-                        // Se o aluno escolheu mais de uma checkbox, o Forms separa por vírgula e espaço
                         if (str.includes(', ')) {
                             respostasArray = str.split(', ').map(s => s.trim());
                         } else {
@@ -1735,9 +1697,6 @@
         });
     }
 
-    // ----------------------------------------------------------------------------------
-    // FUNÇÕES COMPLEMENTARES
-    // ----------------------------------------------------------------------------------
     function filtrarTabelaPorTurma(turmaEscolhida) {
        const rows = document.querySelectorAll("#tabela-alunos-db tbody tr");
        const normalizar = (t) => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ' ').replace(/ em /g, ' de ').trim();
@@ -1783,9 +1742,6 @@
       rows.forEach(row => tbody.appendChild(row));
     }
 
-    // ----------------------------------------------------------------------------------
-    // TRAVA DE SEGURANÇA NA IMPORTAÇÃO
-    // ----------------------------------------------------------------------------------
     function processarExcelReal(input) {
       const file = input.files[0];
       if (!file) return;
@@ -2043,9 +1999,6 @@
       }
     }
 
-    // ----------------------------------------------------------------------------------
-    // GERADOR DE TELA DO ALUNO
-    // ----------------------------------------------------------------------------------
     function buildStudentViewHTML() {
       const inst = document.getElementById('form-inst').value || "Instituição não informada";
       const prof = document.getElementById('form-prof').value || "Professor(a) não informado(a)";
@@ -2074,14 +2027,14 @@
           }
       }
 
-let headerPage = `<div class="preview-page active-page" id="page-0"><div class="aluno-header-preview"><h2>${titulo}</h2>
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #F9FAFB; border: 1px solid #E5E7EB; padding: 20px; border-radius: 12px; margin-top: 25px; margin-bottom: 25px; color: #4B5563; font-size: 0.95rem; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-  <div><strong style="color:var(--sidebar-bg);">Instituição:</strong> ${inst}</div>
-  <div><strong style="color:var(--sidebar-bg);">Duração da Aula:</strong> ${duracao}</div>
-  <div><strong style="color:var(--sidebar-bg);">Professor(a):</strong> ${prof}</div>
-  <div style="grid-column: 1 / -1;"><strong style="color:var(--sidebar-bg);">Local:</strong> ${local}</div>
-</div>
-${desc ? `<div style="background:#FFF5E6; padding:20px; border-radius:6px; margin-top:20px; border:1px solid #FAD7A1; line-height: 1.6;"><p style="margin:0 0 10px 0;"><strong style="color:#D35400;">Informações Importantes:</strong></p><div>${desc}</div></div>` : ''}${matriculaHtml}${contatoHtml}</div><button class="btn btn-secondary" style="margin-top: 20px;" onclick="navPreview(1)">Iniciar Prática / Concordar com Regras</button></div>`;
+      let headerPage = `<div class="preview-page active-page" id="page-0"><div class="aluno-header-preview"><h2>${titulo}</h2>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #F9FAFB; border: 1px solid #E5E7EB; padding: 20px; border-radius: 12px; margin-top: 25px; margin-bottom: 25px; color: #4B5563; font-size: 0.95rem; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+        <div><strong style="color:var(--sidebar-bg);">Instituição:</strong> ${inst}</div>
+        <div><strong style="color:var(--sidebar-bg);">Duração da Aula:</strong> ${duracao}</div>
+        <div><strong style="color:var(--sidebar-bg);">Professor(a):</strong> ${prof}</div>
+        <div style="grid-column: 1 / -1;"><strong style="color:var(--sidebar-bg);">Local:</strong> ${local}</div>
+      </div>
+      ${desc ? `<div style="background:#FFF5E6; padding:20px; border-radius:6px; margin-top:20px; border:1px solid #FAD7A1; line-height: 1.6;"><p style="margin:0 0 10px 0;"><strong style="color:#D35400;">Informações Importantes:</strong></p><div>${desc}</div></div>` : ''}${matriculaHtml}${contatoHtml}</div><button class="btn btn-secondary" style="margin-top: 20px;" onclick="navPreview(1)">Iniciar Prática / Concordar com Regras</button></div>`;
       pagesArray.push(headerPage);
 
       const questions = document.querySelectorAll('.question-card');
@@ -2120,9 +2073,9 @@ ${desc ? `<div style="background:#FFF5E6; padding:20px; border-radius:6px; margi
           let btnArea = `<div style="display:flex; justify-content:space-between; margin-top:20px;"><button class="btn btn-outline" onclick="navPreview(-1)">← Voltar</button>`; 
           
           if (i === questions.length - 1) {
-              btnArea += `<button class="btn" onclick="navPreview(1)">Avançar para Conclusão →</button>`; 
+             btnArea += `<button class="btn" onclick="navPreview(1)">Avançar para Conclusão →</button>`; 
           } else {
-              btnArea += `<button class="btn" onclick="navPreview(1)">Avançar →</button>`; 
+             btnArea += `<button class="btn" onclick="navPreview(1)">Avançar →</button>`; 
           }
           
           btnArea += `</div>`; 
@@ -2260,33 +2213,33 @@ ${desc ? `<div style="background:#FFF5E6; padding:20px; border-radius:6px; margi
       })
       .then(r => r.json())
       .then(() => {
-         alert("Sucesso! Formulário salvo na Planilha e Link gerado.");
-         
-         document.getElementById('form-title').value = ''; 
-         document.getElementById('form-inst').value = ''; 
-         document.getElementById('form-prof').value = ''; 
-         document.getElementById('form-duracao').value = ''; 
-         document.getElementById('form-datalimite').value = ''; 
-         
-         document.querySelectorAll('.form-turma-alvo').forEach(cb => cb.checked = false); 
-         atualizarLabelTurmas();
-         
-         document.getElementById('form-desc').innerHTML = '1. Prática OBRIGATÓRIA: o não comparecimento sem JUSTIFICATIVA gerará FALTA...'; 
-         document.getElementById('form-desc-final').innerHTML = 'Traga sua garrafa de água.<br>Leve um caderno ou agenda para anotações.<br>Não se esqueça de uma caneta.<br><br>Lembre-se: a dedicação nas aulas práticas é um passo essencial para o sucesso na sua carreira!'; 
-         document.getElementById('questions-container').innerHTML = ''; 
-         addQuestion(); 
-         
-         btnSalvar.innerText = textoOriginalBtn; 
-         btnSalvar.disabled = false;
-         currentEditingFormId = null;
-         
-         fetch(API_URL + "?action=buscarHistorico").then(r => r.json()).then(renderizarHistorico);
-         switchTab('historico', document.querySelectorAll('.menu-item')[2]);
+          alert("Sucesso! Formulário salvo na Planilha e Link gerado.");
+          
+          document.getElementById('form-title').value = ''; 
+          document.getElementById('form-inst').value = ''; 
+          document.getElementById('form-prof').value = ''; 
+          document.getElementById('form-duracao').value = ''; 
+          document.getElementById('form-datalimite').value = ''; 
+          
+          document.querySelectorAll('.form-turma-alvo').forEach(cb => cb.checked = false); 
+          atualizarLabelTurmas();
+          
+          document.getElementById('form-desc').innerHTML = '1. Prática OBRIGATÓRIA: o não comparecimento sem JUSTIFICATIVA gerará FALTA...'; 
+          document.getElementById('form-desc-final').innerHTML = 'Traga sua garrafa de água.<br>Leve um caderno ou agenda para anotações.<br>Não se esqueça de uma caneta.<br><br>Lembre-se: a dedicação nas aulas práticas é um passo essencial para o sucesso na sua carreira!'; 
+          document.getElementById('questions-container').innerHTML = ''; 
+          addQuestion(); 
+          
+          btnSalvar.innerText = textoOriginalBtn; 
+          btnSalvar.disabled = false;
+          currentEditingFormId = null;
+          
+          fetch(API_URL + "?action=buscarHistorico").then(r => r.json()).then(renderizarHistorico);
+          switchTab('historico', document.querySelectorAll('.menu-item')[2]);
       })
       .catch(erro => { 
-         alert("⚠️ Erro ao salvar na planilha."); 
-         btnSalvar.innerText = textoOriginalBtn; 
-         btnSalvar.disabled = false; 
+          alert("⚠️ Erro ao salvar na planilha."); 
+          btnSalvar.innerText = textoOriginalBtn; 
+          btnSalvar.disabled = false; 
       });
     }
 
