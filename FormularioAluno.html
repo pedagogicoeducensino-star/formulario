@@ -172,6 +172,27 @@
 
         tituloDaPratica = dadosForm.titulo || dadosForm.nome || "Prática Profissional";
         var prazoString = dadosForm.prazo || dadosForm.dataLimite || "Sem limite";
+
+        // ==========================================
+        // VERIFICAÇÃO DE DATA LIMITE (PRAZO EXPIRADO)
+        // ==========================================
+        if (prazoString && prazoString !== "Sem limite" && prazoString.includes('/')) {
+            var partes = prazoString.split('/');
+            if (partes.length === 3) {
+                // Monta a data limite configurando o horário para 23:59:59 daquele dia
+                var dataPrazo = new Date(partes[2], partes[1] - 1, partes[0], 23, 59, 59);
+                var hoje = new Date();
+                
+                if (hoje > dataPrazo) {
+                    mostrarBloqueio(
+                        "Prazo Encerrado", 
+                        "Esta Prática Profissionalizante não aceita mais respostas, pois a data limite (<strong>" + prazoString + "</strong>) já expirou.<br><br>Procure orientações com a coordenação ou a Sala de Aula."
+                    );
+                    return; // Para a execução aqui e não carrega as perguntas
+                }
+            }
+        }
+        // ==========================================
         
         var pacoteDeDados = dadosForm.jsonPerguntas || dadosForm.htmlProva || dadosForm.html || dadosForm.conteudo || dadosForm.prova || dadosForm.dados || "";
         
