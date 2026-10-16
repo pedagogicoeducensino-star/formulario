@@ -576,7 +576,7 @@
             <button class="btn btn-outline" style="color:#DC2626; border-color:#FCA5A5; background:#FEF2F2; padding: 12px 20px;" onclick="excluirTurmaVisual()">🗑️ Excluir Turma Selecionada</button>
             <button class="btn btn-outline" style="color:#DC2626; border-color:#FCA5A5; background:#FEF2F2; padding: 12px 20px;" onclick="limparTodosOsContatos()">🗑️ Excluir Todos</button>
             <button class="btn btn-outline" style="padding: 12px 20px;" onclick="abrirModalAluno()">+ Adicionar</button>
-            <button class="btn" style="padding: 12px 20px; background:#10B981; color: white;" onclick="document.getElementById('excel-upload').click()">📥 Importar</button>
+            <button class="btn" style="padding: 12px 20px; background:#10B981; color: white;" onclick="document.getElementById('excel-upload').click()">📥 Importar Excel</button>
         </div>
 
         <div class="filter-bar" style="display: flex; gap: 40px; align-items: center; flex-wrap: wrap;">
@@ -660,7 +660,8 @@
               <option value="Respondido">Apenas Respondidos</option>
               <option value="Pendente">Apenas Pendentes</option>
             </select>
-            <button class="btn btn-whats" style="padding: 12px 20px;" onclick="abrirModalCobrancaMassa()">📱 Cobrar Pendentes em Massa</button>
+            <button class="btn btn-whats" style="padding: 12px 20px;" onclick="abrirModalCobrancaMassa()">📱 Cobrar em Massa</button>
+            <button class="btn" style="background:#10B981; color:white; padding: 12px 20px;" onclick="exportarExcelResultados()">📥 Exportar Excel</button>
         </div>
 
         <table id="tabela-resultados">
@@ -683,6 +684,38 @@
   </div> 
 
   <!-- MODAIS -->
+
+  <!-- Modal Opções Importação (Sincronizar vs Substituir) -->
+  <div id="modalOpcoesImportacao" class="modal" style="background: rgba(0,0,0,0.7);">
+    <div class="modal-form-content" style="max-width: 550px; text-align:center;">
+      <span class="close-modal" style="top:20px; right:20px;" onclick="document.getElementById('modalOpcoesImportacao').style.display='none'">&times;</span>
+      <h2 style="margin-top:0; color:var(--sidebar-bg); border-bottom: 2px solid var(--border); padding-bottom:15px; font-weight: 800; font-size: 1.5rem;">📥 Opções de Importação</h2>
+      <p style="color:var(--text-light); margin-bottom: 25px;">Planilha lida com sucesso! Identificamos <strong id="import-qtd-alunos"></strong> alunos da turma <strong id="import-turma-nome" style="color:var(--secondary);"></strong>.</p>
+
+      <button class="btn" style="width:100%; padding:15px; margin-bottom:15px; background:#10B981; color:white; font-size:1.05rem;" onclick="executarImportacao('sincronizar')">
+         🔄 Sincronizar / Atualizar Turma<br>
+         <span style="font-size:0.8rem; font-weight:normal;">Atualiza os nomes e contatos existentes e adiciona os novos. NÃO exclui alunos do banco.</span>
+      </button>
+
+      <button class="btn btn-outline" style="width:100%; padding:15px; color:#DC2626; border-color:#DC2626; font-size:1.05rem;" onclick="executarImportacao('substituir')">
+         ⚠️ Excluir tudo e Substituir<br>
+         <span style="font-size:0.8rem; font-weight:normal;">Apaga todos os alunos atuais desta turma e cadastra apenas os da planilha.</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal Cobrança Individual -->
+  <div id="modalCobrancaIndividual" class="modal" style="background: rgba(0,0,0,0.7);">
+    <div class="modal-form-content" style="max-width: 500px;">
+      <span class="close-modal" style="top:20px; right:20px;" onclick="document.getElementById('modalCobrancaIndividual').style.display='none'">&times;</span>
+      <h2 style="margin-top:0; color:var(--sidebar-bg); border-bottom: 2px solid var(--border); padding-bottom:15px; font-weight: 800; font-size: 1.5rem;">📱 Cobrança Individual</h2>
+      <label>Mensagem para <strong id="cobranca-ind-nome"></strong>:</label>
+      <textarea id="texto-cobranca-ind" style="height:120px; width:100%; margin-top:10px; font-family:inherit; resize:none; border-radius: 8px; padding:10px; border:1px solid var(--border);"></textarea>
+      <input type="hidden" id="cobranca-ind-zap">
+      <button class="btn btn-whats" style="width:100%; padding:15px; margin-top:20px; justify-content:center; font-size:1.1rem; border-radius: 10px;" onclick="enviarCobrancaIndividual()">Enviar WhatsApp</button>
+    </div>
+  </div>
+
   <div id="modalAddAluno" class="modal" style="background: rgba(0,0,0,0.6);">
     <div class="modal-form-content">
       <span class="close-modal" style="top:20px; right:20px;" onclick="document.getElementById('modalAddAluno').style.display='none'">&times;</span>
@@ -795,6 +828,9 @@
     let janelaWhatsapp = null; 
     let currentPage = 0;
 
+    let alunosParaImportarTemp = [];
+    let turmaImportacaoTemp = "";
+
     let turmasDisponiveis = [
       "Assistente em Administração", "Atendente de Farmácia", "Cuidador de Idosos",
       "Designer de Games e Edições", "Designer Gráfico", "Informática Essencial",
@@ -824,6 +860,55 @@
             if(options) options.style.display = 'none';
         }
     });
+
+    // -------- FUNÇÕES DE EXPORTAR EXCEL --------
+    function exportarExcelResultados() {
+        if (!dadosRelatorioGlobal) {
+            alert("Selecione um formulário primeiro.");
+            return;
+        }
+        const tbody = document.getElementById('tbody-resultados');
+        const rows = tbody.querySelectorAll('tr');
+        if (rows.length === 0 || rows[0].innerText.includes('Nenhum aluno')) {
+            alert("Não há dados visíveis para exportar.");
+            return;
+        }
+
+        let dadosParaExcel = [["Data Resposta", "Matrícula", "Nome do Aluno", "Status"]];
+
+        rows.forEach(tr => {
+            if (tr.cells.length < 4) return;
+            let data = tr.cells[0].innerText;
+            let mat = tr.cells[1].innerText;
+            let nome = tr.cells[2].innerText;
+            let status = tr.cells[3].innerText.replace('✔️ Confirmado', 'Respondido').replace('💬 Cobrar', '').trim();
+            dadosParaExcel.push([data, mat, nome, status]);
+        });
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(dadosParaExcel);
+        XLSX.utils.book_append_sheet(wb, ws, "Resultados");
+
+        const tituloSafe = dadosRelatorioGlobal.tituloForm ? dadosRelatorioGlobal.tituloForm.substring(0, 20).replace(/[^a-zA-Z0-9]/g, '_') : "Relatorio";
+        XLSX.writeFile(wb, `Resultados_${tituloSafe}.xlsx`);
+    }
+
+    // -------- FUNÇÕES DE COBRANÇA INDIVIDUAL --------
+    function abrirCobrancaIndividual(nome, zap) {
+        document.getElementById('cobranca-ind-nome').innerText = nome.split(' ')[0];
+        document.getElementById('cobranca-ind-zap').value = zap;
+        const msgPadrao = `Olá ${nome.split(' ')[0]}, tudo bem? Não se esqueça de responder seu formulário da prática profissional: ${dadosRelatorioGlobal.tituloForm}!`;
+        document.getElementById('texto-cobranca-ind').value = msgPadrao;
+        document.getElementById('modalCobrancaIndividual').style.display = 'flex';
+    }
+
+    function enviarCobrancaIndividual() {
+        const zap = document.getElementById('cobranca-ind-zap').value;
+        const msg = encodeURIComponent(document.getElementById('texto-cobranca-ind').value);
+        const linkWhats = `https://api.whatsapp.com/send?phone=${zap}&text=${msg}`;
+        window.open(linkWhats, '_blank');
+        document.getElementById('modalCobrancaIndividual').style.display = 'none';
+    }
 
     function renderizarDropdownTurmas() {
         const container = document.getElementById('turmas-options-container');
@@ -1374,19 +1459,17 @@
                      if (zap.length > 11) zap = zap.substring(0, 11);
                      if (zap.length === 11 || zap.length === 10) contatosValidos.push(zap);
                  });
-                 let msg = encodeURIComponent(`Olá ${aluno.nome.split(' ')[0]}, tudo bem? Não se esqueça de responder seu formulário da prática profissional: ${dadosRelatorioGlobal.tituloForm}!`);
+
                  if (contatosValidos.length === 0) {
                     btnWhatsHtml = `<span style="color:#999; font-size:0.8rem;">Sem Nº Válido</span>`;
                  } else if (contatosValidos.length === 1) {
                     let zap = "55" + contatosValidos[0];
-                    let linkApp = `https://api.whatsapp.com/send?phone=${zap}&text=${msg}`;
-                    btnWhatsHtml = `<a href="${linkApp}" target="_blank" class="btn-whats">💬 Cobrar</a>`;
+                    btnWhatsHtml = `<button onclick="abrirCobrancaIndividual('${aluno.nome}', '${zap}')" class="btn-whats">💬 Cobrar</button>`;
                  } else {
                     btnWhatsHtml = `<div style="display:flex; flex-direction:column; gap:5px;">`;
                     contatosValidos.forEach((zapNum, idx) => {
                         let zap = "55" + zapNum;
-                        let linkApp = `https://api.whatsapp.com/send?phone=${zap}&text=${msg}`;
-                        btnWhatsHtml += `<a href="${linkApp}" target="_blank" class="btn-whats" style="padding: 4px 8px; font-size: 0.8rem; justify-content: center; white-space: nowrap;">💬 Cobrar (Nº ${idx + 1})</a>`;
+                        btnWhatsHtml += `<button onclick="abrirCobrancaIndividual('${aluno.nome}', '${zap}')" class="btn-whats" style="padding: 4px 8px; font-size: 0.8rem; justify-content: center; white-space: nowrap;">💬 Cobrar (Nº ${idx + 1})</button>`;
                     });
                     btnWhatsHtml += `</div>`;
                  }
@@ -1784,10 +1867,12 @@
         let turmaIdentificada = ""; 
         for (let i = 1; i < rows.length; i++) {
           const row = rows[i];
-          if (!row || row.length === 0 || !row[0]) continue; 
-          const mat = row[0] || '';
-          const nome = row[1] || '';
-          const curso = row[2] || '';
+          if (!row || row.length === 0 || row[0] === undefined) continue; 
+          
+          // Tratamento para remover espaços invisíveis da matrícula (Ponto 1)
+          const mat = String(row[0]).trim();
+          const nome = String(row[1] || '').trim();
+          const curso = String(row[2] || '').trim();
           if (!turmaIdentificada && curso) turmaIdentificada = curso; 
           
           let tels = []; 
@@ -1807,25 +1892,40 @@
             input.value = "";
             return;
         }
-        if (confirm(`ATENÇÃO! O sistema identificou a turma: "${turmaIdentificada}".\n\nEssa nova importação irá EXCLUIR todos os alunos já cadastrados anteriormente dessa turma para fazer uma atualização geral.\n\nDeseja continuar?`)) {
-            document.getElementById('tbody-banco-alunos').innerHTML = `<tr><td colspan="6" style="text-align: center; color: #999; padding: 30px;">⏳ Substituindo todos os alunos da turma ${turmaIdentificada}... Isso pode demorar alguns segundos.</td></tr>`;
-            fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({action: 'substituirTurma', nomeTurma: turmaIdentificada, matrizAlunos: alunosParaSalvarNoBanco})
-            })
-            .then(r => r.json())
-            .then(() => {
-                alert(`✅ Sucesso! A turma ${turmaIdentificada} foi completamente atualizada com ${alunosParaSalvarNoBanco.length} alunos.`);
-                fetch(API_URL + "?action=buscarAlunos").then(r => r.json()).then(renderizarBancoDeAlunos);
-            })
-            .catch(erro => {
-                alert("⚠️ Erro na importação.");
-                fetch(API_URL + "?action=buscarAlunos").then(r => r.json()).then(renderizarBancoDeAlunos);
-            });
-        }
+
+        alunosParaImportarTemp = alunosParaSalvarNoBanco;
+        turmaImportacaoTemp = turmaIdentificada;
+        document.getElementById('import-qtd-alunos').innerText = alunosParaSalvarNoBanco.length;
+        document.getElementById('import-turma-nome').innerText = turmaIdentificada;
+        document.getElementById('modalOpcoesImportacao').style.display = 'flex';
         input.value = ""; 
       };
       reader.readAsArrayBuffer(file);
+    }
+
+    function executarImportacao(modo) {
+        document.getElementById('modalOpcoesImportacao').style.display = 'none';
+        let acaoBackend = modo === 'sincronizar' ? 'sincronizarTurma' : 'substituirTurma';
+
+        if (modo === 'substituir' && !confirm(`Tem absoluta certeza que deseja EXCLUIR e substituir todos os alunos da turma ${turmaImportacaoTemp}?`)) {
+            return;
+        }
+
+        document.getElementById('tbody-banco-alunos').innerHTML = `<tr><td colspan="6" style="text-align: center; color: #999; padding: 30px;">⏳ Processando a turma ${turmaImportacaoTemp}... Aguarde.</td></tr>`;
+
+        fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({action: acaoBackend, nomeTurma: turmaImportacaoTemp, matrizAlunos: alunosParaImportarTemp})
+        })
+        .then(r => r.json())
+        .then(res => {
+            alert(`✅ Importação concluída com sucesso!`);
+            fetch(API_URL + "?action=buscarAlunos").then(r => r.json()).then(renderizarBancoDeAlunos);
+        })
+        .catch(erro => {
+            alert("⚠️ Erro na importação.");
+            fetch(API_URL + "?action=buscarAlunos").then(r => r.json()).then(renderizarBancoDeAlunos);
+        });
     }
 
     function abrirModalAluno(btn = null) {
@@ -2054,7 +2154,6 @@
           }
       }
 
-      // NOVO VISUAL DA CAIXA DE DETALHES NO ALUNO
       let headerPage = `<div class="preview-page active-page" id="page-0">
       <div class="aluno-header-preview">
           <h2>${titulo}</h2>
