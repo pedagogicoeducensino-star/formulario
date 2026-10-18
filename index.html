@@ -435,11 +435,10 @@
   <input type="file" id="excel-upload" style="display:none" accept=".xlsx, .xls, .csv" onchange="processarExcelReal(this)">
 
   <div id="login-screen">
-    <div class="login-box">
+<div class="login-box">
       <h2>Portal de Monitoramento e Controle de Formulários</h2>
       <p>Acesso restrito à Coordenação/Professores</p>
-      <input type="text" id="login-user" placeholder="Usuário">
-      <input type="password" id="login-pass" placeholder="Senha" onkeypress="if(event.key === 'Enter') fazerLogin()">
+      <input type="password" id="login-pass" placeholder="Digite a Senha de Acesso" onkeypress="if(event.key === 'Enter') fazerLogin()">
       <button class="btn" style="width: 100%;" onclick="fazerLogin()">Entrar no Sistema</button>
     </div>
   </div>
@@ -861,7 +860,7 @@
         }
     });
 
-    // -------- FUNÇÕES DE EXPORTAR EXCEL --------
+// -------- FUNÇÕES DE EXPORTAR EXCEL --------
     function exportarExcelResultados() {
         if (!dadosRelatorioGlobal) {
             alert("Selecione um formulário primeiro.");
@@ -874,15 +873,29 @@
             return;
         }
 
-        let dadosParaExcel = [["Data Resposta", "Matrícula", "Nome do Aluno", "Status"]];
+        // Cabeçalho atualizado com a coluna "Telefone"
+        let dadosParaExcel = [["Data Resposta", "Matrícula", "Nome do Aluno", "Telefone", "Status"]];
 
         rows.forEach(tr => {
             if (tr.cells.length < 4) return;
             let data = tr.cells[0].innerText;
             let mat = tr.cells[1].innerText;
             let nome = tr.cells[2].innerText;
-            let status = tr.cells[3].innerText.replace('✔️ Confirmado', 'Respondido').replace('💬 Cobrar', '').trim();
-            dadosParaExcel.push([data, mat, nome, status]);
+            
+            // Limpa o texto do status para garantir formatação correta
+            let status = tr.cells[3].innerText;
+            if (status.includes('Confirmado') || status.includes('Respondido')) status = 'Respondido';
+            else if (status.includes('Pendente')) status = 'Pendente';
+
+            // Busca o telefone original do aluno no objeto global já carregado
+            let telefone = "Não informado";
+            let alunoData = dadosRelatorioGlobal.alunos.find(a => a.matricula === mat);
+            if (alunoData && alunoData.telefone) {
+                // Caso o aluno tenha múltiplos números (separados por enter), trocamos por barra no Excel
+                telefone = alunoData.telefone.replace(/\n/g, ' / ');
+            }
+
+            dadosParaExcel.push([data, mat, nome, telefone, status]);
         });
 
         const wb = XLSX.utils.book_new();
@@ -1019,15 +1032,14 @@
        }
     }
 
-    function fazerLogin() {
-      const user = document.getElementById('login-user').value;
+function fazerLogin() {
       const pass = document.getElementById('login-pass').value;
-      if (user === 'chefinho' && pass === 'Educ@2023E') {
+      if (pass === 'Educ@2023E') {
         sessionStorage.setItem('usuarioLogado', 'sim'); 
         document.getElementById('login-screen').style.display = 'none';
         document.body.style.overflow = 'auto';
       } else { 
-        alert("⚠️ Usuário ou senha incorretos! Procure a Coordenação da Escola."); 
+        alert("⚠️ Senha incorreta! Procure a Coordenação da Escola."); 
       }
     }
 
