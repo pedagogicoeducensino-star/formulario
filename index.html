@@ -844,21 +844,35 @@
         </div>
       </div>
 
-      <div style="display:flex; gap:18px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:16px; padding:12px 16px; background:#F9FAFB; border-radius:10px; border:1px solid var(--border);">
-        <div style="display:flex; gap:18px; flex-wrap:wrap; align-items:center;">
-          <label style="margin:0; font-weight:600; text-transform:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
-            <input type="checkbox" id="ws-incluir-55" checked onchange="atualizarPreviewWaSeller()"> Padrão Internacional (DDI 55)
-          </label>
-          <label style="margin:0; font-weight:600; text-transform:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
-            <input type="checkbox" id="ws-remover-duplicados" checked onchange="atualizarPreviewWaSeller()"> Remover números duplicados
-          </label>
+<div style="margin-bottom:16px; padding:14px 16px; background:#F9FAFB; border-radius:10px; border:1px solid var(--border);">
+        <div style="display:flex; gap:18px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+          <div style="display:flex; gap:18px; flex-wrap:wrap; align-items:center;">
+            <label style="margin:0; font-weight:600; text-transform:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
+              <input type="checkbox" id="ws-incluir-55" checked onchange="atualizarPreviewWaSeller()"> Padrão Internacional (DDI 55)
+            </label>
+            <label style="margin:0; font-weight:600; text-transform:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
+              <input type="checkbox" id="ws-remover-duplicados" checked onchange="atualizarPreviewWaSeller()"> Remover números duplicados
+            </label>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:0.85rem; font-weight:700; color:var(--sidebar-bg);">Formato:</span>
+            <select id="ws-formato-arquivo" style="width:auto; padding:6px 10px; font-size:0.88rem; background:white;">
+              <option value="xlsx">Excel (.xlsx)</option>
+              <option value="csv">CSV (.csv)</option>
+            </select>
+          </div>
         </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span style="font-size:0.85rem; font-weight:700; color:var(--sidebar-bg);">Formato:</span>
-          <select id="ws-formato-arquivo" style="width:auto; padding:6px 10px; font-size:0.88rem; background:white;">
-            <option value="xlsx">Excel (.xlsx)</option>
-            <option value="csv">CSV (.csv)</option>
-          </select>
+
+        <!-- Filtro de Turmas (1, várias ou todas) -->
+        <div id="ws-filtro-turmas-box" style="margin-top:12px; padding-top:12px; border-top:1px dashed #D1D5DB; display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+            <span style="font-size:0.84rem; font-weight:700; color:var(--sidebar-bg);">🎯 Turma(s) para exportar:</span>
+            <div style="display:flex; gap:8px;">
+              <button type="button" onclick="marcarTodasTurmasWaSeller(true)" style="background:white; border:1px solid #CBD5E1; color:var(--waseller); padding:3px 10px; border-radius:6px; font-size:0.78rem; font-weight:700; cursor:pointer;">Marcar todas</button>
+              <button type="button" onclick="marcarTodasTurmasWaSeller(false)" style="background:white; border:1px solid #CBD5E1; color:#6B7280; padding:3px 10px; border-radius:6px; font-size:0.78rem; font-weight:700; cursor:pointer;">Limpar</button>
+            </div>
+          </div>
+          <div id="ws-lista-turmas-checks" style="display:flex; flex-wrap:wrap; gap:8px; max-height:115px; overflow-y:auto; padding:2px 0;"></div>
         </div>
       </div>
 
@@ -1219,7 +1233,7 @@
       return incluirDDI55 ? ('55' + numeroNacional) : numeroNacional;
     }
 
-    function abrirModalWaSeller(origem) {
+function abrirModalWaSeller(origem) {
       if (origem === 'resultados' && !dadosRelatorioGlobal) {
         alert("Selecione um formulário primeiro na aba Resultados.");
         return;
@@ -1232,52 +1246,95 @@
       if (origem === 'resultados') {
         boxFiltroRes.style.display = 'block';
         rowsOnlyRes.forEach(r => r.style.display = 'grid');
-        document.getElementById('ws-origem-titulo').innerText = `Origem: Formulário "${dadosRelatorioGlobal.tituloForm || 'Selecionado'}"`;
-        wsNomeArquivoBase = `WaSeller_${(dadosRelatorioGlobal.tituloForm || 'Formulario').substring(0, 24).replace(/[^a-zA-Z0-9]/g, '_')}`;
       } else if (origem === 'banco') {
         boxFiltroRes.style.display = 'none';
         rowsOnlyRes.forEach(r => r.style.display = 'none');
-        const turmaAtiva = document.getElementById('filtro-turma-visual').value;
-        document.getElementById('ws-origem-titulo').innerText = turmaAtiva === 'Todas'
-          ? 'Origem: Banco de Alunos (Todas as Turmas)'
-          : `Origem: Banco de Alunos — Turma "${turmaAtiva}"`;
-        wsNomeArquivoBase = `WaSeller_${turmaAtiva.substring(0, 24).replace(/[^a-zA-Z0-9]/g, '_')}`;
       }
 
       document.getElementById('ws-painel-variaveis').style.display = 'none';
       document.getElementById('ws-vars-arrow').innerText = '▼';
 
+      popularFiltroTurmasWaSeller();
       atualizarPreviewWaSeller();
       document.getElementById('modalExportarWaSeller').style.display = 'flex';
     }
 
-    function togglePainelVariaveisWaSeller() {
-      const painel = document.getElementById('ws-painel-variaveis');
-      const arrow = document.getElementById('ws-vars-arrow');
-      const abrir = painel.style.display === 'none';
-      painel.style.display = abrir ? 'block' : 'none';
-      arrow.innerText = abrir ? '▲' : '▼';
+    function popularFiltroTurmasWaSeller() {
+      const box = document.getElementById('ws-filtro-turmas-box');
+      const container = document.getElementById('ws-lista-turmas-checks');
+      container.innerHTML = '';
+
+      const normalizar = (t) => String(t || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ' ').replace(/ em /g, ' de ').trim();
+
+      let fonteCursos = [];
+      if (wsOrigemAtual === 'banco') {
+        fonteCursos = bancoAlunosGlobal.map(a => a.curso);
+      } else if (wsOrigemAtual === 'resultados' && dadosRelatorioGlobal) {
+        fonteCursos = (dadosRelatorioGlobal.alunos || []).map(a => a.curso);
+      } else if (wsOrigemAtual === 'avulso') {
+        fonteCursos = wsListaAvulsa.map(a => a.curso);
+      }
+
+      // Lista única de turmas existentes na origem atual
+      const mapaUnico = new Map();
+      fonteCursos.forEach(c => {
+        const limpo = String(c || '').trim();
+        if (!limpo) return;
+        const chave = normalizar(limpo);
+        if (!mapaUnico.has(chave)) mapaUnico.set(chave, limpo);
+      });
+
+      const turmasOrdenadas = Array.from(mapaUnico.values()).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+      if (turmasOrdenadas.length === 0) {
+        box.style.display = 'none';
+        return;
+      }
+
+      box.style.display = 'block';
+
+      // Se abriu do Banco já filtrando uma turma na tela, começa com só ela marcada; senão marca todas
+      const turmaTelaBanco = wsOrigemAtual === 'banco' ? document.getElementById('filtro-turma-visual').value : 'Todas';
+      const turmaTelaNorm = normalizar(turmaTelaBanco);
+
+      turmasOrdenadas.forEach(turma => {
+        const marcado = (turmaTelaBanco === 'Todas' || normalizar(turma) === turmaTelaNorm);
+        const safeVal = turma.replace(/"/g, '&quot;');
+        const label = document.createElement('label');
+        label.style = "margin:0; padding:6px 11px; background:white; border:1px solid #D1D5DB; border-radius:20px; font-size:0.82rem; font-weight:600; text-transform:none; letter-spacing:0; cursor:pointer; display:inline-flex; align-items:center; gap:6px; color:var(--sidebar-bg);";
+        label.innerHTML = `<input type="checkbox" class="ws-turma-check" value="${safeVal}" ${marcado ? 'checked' : ''} onchange="atualizarPreviewWaSeller()"> ${turma}`;
+        container.appendChild(label);
+      });
     }
 
-    function adicionarVariavelFixaWaSeller(nomeCol = '', valorFixo = '') {
-      const container = document.getElementById('ws-variaveis-fixas-container');
-      const div = document.createElement('div');
-      div.className = 'ws-var-row ws-fixed-var-row';
-      div.style.gridTemplateColumns = '1fr 1.3fr auto';
-      div.innerHTML = `
-        <input type="text" class="ws-fixed-key" value="${nomeCol}" placeholder="Coluna (ex: Etiqueta, Origem)" oninput="atualizarPreviewWaSeller()">
-        <input type="text" class="ws-fixed-val" value="${valorFixo}" placeholder="Valor fixo (ex: Pendente Prática)" oninput="atualizarPreviewWaSeller()">
-        <button type="button" style="color:#DC2626; background:none; border:none; cursor:pointer; font-weight:bold; font-size:1.1rem;" onclick="this.parentElement.remove(); atualizarPreviewWaSeller();" title="Remover">✕</button>
-      `;
-      container.appendChild(div);
+    function marcarTodasTurmasWaSeller(marcar) {
+      document.querySelectorAll('.ws-turma-check').forEach(cb => cb.checked = marcar);
       atualizarPreviewWaSeller();
+    }
+
+    function obterTurmasSelecionadasWaSeller() {
+      const normalizar = (t) => String(t || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ' ').replace(/ em /g, ' de ').trim();
+      const todos = Array.from(document.querySelectorAll('.ws-turma-check'));
+      const marcados = todos.filter(cb => cb.checked);
+      return {
+        totalDisponiveis: todos.length,
+        todasMarcadas: todos.length > 0 && marcados.length === todos.length,
+        nomes: marcados.map(cb => cb.value),
+        normSet: new Set(marcados.map(cb => normalizar(cb.value)))
+      };
     }
 
     function coletarRegistrosBaseWaSeller() {
       const normalizar = (t) => String(t || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ' ').replace(/ em /g, ' de ').trim();
+      const filtroTurmas = obterTurmasSelecionadasWaSeller();
+      const aplicarFiltroTurma = (curso) => {
+        if (filtroTurmas.totalDisponiveis === 0 || filtroTurmas.todasMarcadas) return true;
+        if (filtroTurmas.nomes.length === 0) return false;
+        return filtroTurmas.normSet.has(normalizar(curso));
+      };
 
       if (wsOrigemAtual === 'avulso') {
-        return wsListaAvulsa;
+        return wsListaAvulsa.filter(a => aplicarFiltroTurma(a.curso));
       }
 
       if (wsOrigemAtual === 'resultados' && dadosRelatorioGlobal) {
@@ -1287,7 +1344,7 @@
         const linkForm = formIdAtual ? (SITE_ALUNO_URL + '?id=' + formIdAtual) : '';
 
         return (dadosRelatorioGlobal.alunos || [])
-          .filter(a => statusAlvo === 'Todos' || a.status === statusAlvo)
+          .filter(a => (statusAlvo === 'Todos' || a.status === statusAlvo) && aplicarFiltroTurma(a.curso))
           .map(a => ({
             nome: a.nome || '',
             telefones: String(a.telefone || '').split(/[\n;/]+/).map(t => t.trim()).filter(Boolean),
@@ -1300,16 +1357,8 @@
           }));
       }
 
-      const turmaFiltro = document.getElementById('filtro-turma-visual').value;
-      const termoBusca = (document.getElementById('busca-banco-alunos')?.value || '').trim().toLowerCase();
-      const turmaFiltroNorm = normalizar(turmaFiltro);
-
       return bancoAlunosGlobal
-        .filter(a => {
-          const matchTurma = turmaFiltro === 'Todas' || normalizar(a.curso) === turmaFiltroNorm;
-          const matchTermo = !termoBusca || a.nome.toLowerCase().includes(termoBusca) || String(a.matricula).toLowerCase().includes(termoBusca);
-          return matchTurma && matchTermo;
-        })
+        .filter(a => aplicarFiltroTurma(a.curso))
         .map(a => ({
           nome: a.nome || '',
           telefones: String(a.telefone || '').split(/[\n;/]+/).map(t => t.trim()).filter(Boolean),
@@ -1322,76 +1371,33 @@
         }));
     }
 
-    function montarMatrizWaSeller() {
-      const incluir55 = document.getElementById('ws-incluir-55').checked;
-      const removerDup = document.getElementById('ws-remover-duplicados').checked;
-
-      const colunas = [
-        { tipo: 'nome', titulo: 'Nome' },
-        { tipo: 'telefone', titulo: 'Telefone' }
-      ];
-
-      if (document.getElementById('ws-col-curso').checked) {
-        colunas.push({ tipo: 'curso', titulo: document.getElementById('ws-col-curso-nome').value.trim() || 'Curso' });
-      }
-      if (document.getElementById('ws-col-matricula').checked) {
-        colunas.push({ tipo: 'matricula', titulo: document.getElementById('ws-col-matricula-nome').value.trim() || 'Matricula' });
-      }
-      if (document.getElementById('ws-col-horario').checked) {
-        colunas.push({ tipo: 'horario', titulo: document.getElementById('ws-col-horario-nome').value.trim() || 'Horario' });
-      }
-      if (wsOrigemAtual === 'resultados') {
-        if (document.getElementById('ws-col-pratica').checked) {
-          colunas.push({ tipo: 'pratica', titulo: document.getElementById('ws-col-pratica-nome').value.trim() || 'Pratica' });
-        }
-        if (document.getElementById('ws-col-prazo').checked) {
-          colunas.push({ tipo: 'prazo', titulo: document.getElementById('ws-col-prazo-nome').value.trim() || 'Prazo' });
-        }
-        if (document.getElementById('ws-col-link').checked) {
-          colunas.push({ tipo: 'link', titulo: document.getElementById('ws-col-link-nome').value.trim() || 'Link' });
-        }
-      }
-
-      document.querySelectorAll('.ws-fixed-var-row').forEach(row => {
-        const k = row.querySelector('.ws-fixed-key').value.trim();
-        const v = row.querySelector('.ws-fixed-val').value.trim();
-        if (k) colunas.push({ tipo: 'fixa', titulo: k, valor: v });
-      });
-
-      const registros = coletarRegistrosBaseWaSeller();
-      const cabecalho = colunas.map(c => c.titulo);
-      const linhas = [];
-      const telefonesVistos = new Set();
-      let duplicadosIgnorados = 0;
-
-      registros.forEach(reg => {
-        const nomeLimpo = limparNomeWaSeller(reg.nome);
-        if (!nomeLimpo) return;
-
-        (reg.telefones || []).forEach(telRaw => {
-          const telLimpo = higienizarTelefoneWaSeller(telRaw, incluir55);
-          if (!telLimpo) return;
-
-          if (removerDup && telefonesVistos.has(telLimpo)) {
-            duplicadosIgnorados++;
-            return;
-          }
-          telefonesVistos.add(telLimpo);
-
-          const linha = colunas.map(col => {
-            if (col.tipo === 'nome') return nomeLimpo;
-            if (col.tipo === 'telefone') return telLimpo;
-            if (col.tipo === 'fixa') return col.valor || '';
-            return String(reg[col.tipo] || '').trim();
-          });
-          linhas.push(linha);
-        });
-      });
-
-      return { cabecalho, linhas, totalAlunos: registros.length, duplicadosIgnorados };
-    }
-
     function atualizarPreviewWaSeller() {
+      const filtroTurmas = obterTurmasSelecionadasWaSeller();
+      const tituloEl = document.getElementById('ws-origem-titulo');
+
+      // Atualiza título do resumo e nome do arquivo conforme as turmas marcadas
+      if (wsOrigemAtual === 'banco') {
+        if (filtroTurmas.todasMarcadas || filtroTurmas.totalDisponiveis === 0) {
+          tituloEl.innerText = 'Origem: Banco de Alunos (Todas as Turmas)';
+          wsNomeArquivoBase = 'WaSeller_Todas_as_Turmas';
+        } else if (filtroTurmas.nomes.length === 0) {
+          tituloEl.innerText = 'Origem: Banco de Alunos (Nenhuma turma selecionada)';
+          wsNomeArquivoBase = 'WaSeller_Contatos';
+        } else if (filtroTurmas.nomes.length === 1) {
+          tituloEl.innerText = `Origem: Banco de Alunos — ${filtroTurmas.nomes[0]}`;
+          wsNomeArquivoBase = `WaSeller_${filtroTurmas.nomes[0].substring(0, 26).replace(/[^a-zA-Z0-9]/g, '_')}`;
+        } else {
+          tituloEl.innerText = `Origem: Banco de Alunos (${filtroTurmas.nomes.length} turmas selecionadas)`;
+          wsNomeArquivoBase = `WaSeller_${filtroTurmas.nomes.length}_Turmas`;
+        }
+      } else if (wsOrigemAtual === 'resultados' && dadosRelatorioGlobal) {
+        const sufixoTurma = (!filtroTurmas.todasMarcadas && filtroTurmas.nomes.length > 0)
+          ? ` — ${filtroTurmas.nomes.length === 1 ? filtroTurmas.nomes[0] : filtroTurmas.nomes.length + ' turmas'}`
+          : '';
+        tituloEl.innerText = `Origem: Formulário "${dadosRelatorioGlobal.tituloForm || 'Selecionado'}"${sufixoTurma}`;
+        wsNomeArquivoBase = `WaSeller_${(dadosRelatorioGlobal.tituloForm || 'Formulario').substring(0, 24).replace(/[^a-zA-Z0-9]/g, '_')}`;
+      }
+
       const { cabecalho, linhas, totalAlunos, duplicadosIgnorados } = montarMatrizWaSeller();
       const resumo = document.getElementById('ws-resumo-contagem');
       const dupTxt = duplicadosIgnorados > 0 ? ` (${duplicadosIgnorados} duplicado(s) removido(s))` : '';
@@ -1514,6 +1520,7 @@
         document.getElementById('ws-filtro-resultados-box').style.display = 'none';
         document.querySelectorAll('.ws-only-resultados').forEach(el => el.style.display = 'none');
         document.getElementById('ws-origem-titulo').innerText = `Origem: Planilha Avulsa "${file.name}"`;
+        popularFiltroTurmasWaSeller();
         atualizarPreviewWaSeller();
         input.value = "";
       };
