@@ -815,7 +815,7 @@
   </div>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzOEm137Mjr-XMxWgu-5A_Gull6Y0vOWGXWbe1xfiKlXyNSvDNT-FV6gHI0L7ezyLYs/exec'; 
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxz6CzvGvOH3C3cA1nxnr2eBvfH4c5xpjgVij5aDdMTayZhkIWOaWkiT6s46NcCB6sK/exec'; 
     const SITE_ALUNO_URL = 'https://pedagogicoeducensino-star.github.io/formulario/FormularioAluno.html';
 
     let currentEditingFormId = null;
@@ -878,9 +878,9 @@
 
         rows.forEach(tr => {
             if (tr.cells.length < 4) return;
-            let data = tr.cells[0].innerText;
-            let mat = tr.cells[1].innerText;
-            let nome = tr.cells[2].innerText;
+            let data = tr.cells[0].innerText.trim();
+            let mat = tr.cells[1].innerText.trim();
+            let nome = tr.cells[2].innerText.trim();
             
             // Limpa o texto do status para garantir formatação correta
             let status = tr.cells[3].innerText;
@@ -889,7 +889,7 @@
 
             // Busca o telefone original do aluno no objeto global já carregado
             let telefone = "Não informado";
-            let alunoData = dadosRelatorioGlobal.alunos.find(a => a.matricula === mat);
+            let alunoData = dadosRelatorioGlobal.alunos.find(a => String(a.matricula).trim() === String(mat).trim());
             if (alunoData && alunoData.telefone) {
                 // Caso o aluno tenha múltiplos números (separados por enter), trocamos por barra no Excel
                 telefone = alunoData.telefone.replace(/\n/g, ' / ');
@@ -1247,7 +1247,7 @@ function fazerLogin() {
         }
     }
 
-    function renderizarHistorico(respostaJson) {
+  function renderizarHistorico(respostaJson) {
         const tbody = document.getElementById('tbody-historico');
         const selectRelat = document.getElementById('select-relatorio');
         tbody.innerHTML = '';
@@ -1264,12 +1264,16 @@ function fazerLogin() {
                 let d = new Date(dataLimpada);
                 if (!isNaN(d)) dataLimpada = d.toLocaleDateString('pt-BR');
             }
+            const statusHtml = form.status === 'Encerrado'
+                ? '<span class="status-tag st-pendente">Encerrado (Histórico Protegido)</span>'
+                : '<span class="status-tag st-ativo">Ativo</span>';
+
             tbody.innerHTML += `<tr>
               <td>${dataLimpada}</td>
               <td style="font-weight:bold; color:var(--sidebar-bg);">${form.titulo}<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-light);">Turmas: ${form.turmas}</span></td>
               <td>${form.prazo}</td>
               <td>
-                <span class="status-tag st-ativo">Ativo</span>
+                ${statusHtml}
                 <div class="link-box">
                   <input type="text" value="${linkGerado}" readonly>
                   <button onclick="copiarLink(this)">Copiar</button>
@@ -1285,7 +1289,7 @@ function fazerLogin() {
             selectRelat.innerHTML += `<option value="${form.id}">${form.titulo} (${dataLimpada})</option>`;
         });
     }
-
+    
     function carregarFormularioParaEdicao(formId) {
         currentEditingFormId = formId;
         switchTab('nova-pratica', document.querySelectorAll('.menu-item')[0]);
@@ -1508,7 +1512,7 @@ function fazerLogin() {
     }
 
     function abrirRespostasAluno(matricula) {
-       const aluno = dadosRelatorioGlobal.alunos.find(a => a.matricula === matricula);
+       const aluno = dadosRelatorioGlobal.alunos.find(a => String(a.matricula).trim() === String(matricula).trim());
        if(!aluno) return;
        document.getElementById('respostas-aluno-nome').innerText = aluno.nome;
        document.getElementById('respostas-aluno-mat').innerText = aluno.matricula;
@@ -1862,7 +1866,7 @@ function fazerLogin() {
       rows.forEach(row => tbody.appendChild(row));
     }
 
-    function processarExcelReal(input) {
+   function processarExcelReal(input) {
       const file = input.files[0];
       if (!file) return;
       const reader = new FileReader();
@@ -1874,39 +1878,46 @@ function fazerLogin() {
         const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
         
         let alunosParaSalvarNoBanco = [];
-        let turmaIdentificada = ""; 
+        let turmasEncontradas = new Set();
+
         for (let i = 1; i < rows.length; i++) {
           const row = rows[i];
-          if (!row || row.length === 0 || row[0] === undefined) continue; 
+          if (!row || row.length === 0 || row[0] === undefined || row[0] === null) continue; 
           
-          // Tratamento para remover espaços invisíveis da matrícula (Ponto 1)
-          const mat = String(row[0]).trim();
-          const nome = String(row[1] || '').trim();
-          const curso = String(row[2] || '').trim();
-          if (!turmaIdentificada && curso) turmaIdentificada = curso; 
+          const matBruta = String(row[0]).replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim().replace(/[.,]0+$/, '');
+          const mat = matBruta.replace(/\D/g, '') || matBruta;
+          const nome = String(row[1] || '').replace(/[\u200B-\u200D\uFEFF\u00A0]/g, ' ').trim();
+          const curso = String(row[2] || '').replace(/[\u200B-\u200D\uFEFF\u00A0]/g, ' ').trim();
+
+          if (!mat || !nome) continue;
+          if (curso) turmasEncontradas.add(curso);
           
           let tels = []; 
-          if (row[3]) tels.push(row[3]); 
-          if (row[4]) tels.push(row[4]); 
-          if (row[5]) tels.push(row[5]);
-          const telStr = tels.join('\n'); 
+          if (row[3]) tels.push(String(row[3]).trim()); 
+          if (row[4]) tels.push(String(row[4]).trim()); 
+          if (row[5]) tels.push(String(row[5]).trim());
+          const telStr = tels.filter(Boolean).join('\n'); 
+
           let hors = []; 
-          if (row[6]) hors.push(row[6]); 
-          if (row[7]) hors.push(row[7]); 
-          if (row[8]) hors.push(row[8]);
-          const horStr = hors.join('\n');
+          if (row[6]) hors.push(String(row[6]).trim()); 
+          if (row[7]) hors.push(String(row[7]).trim()); 
+          if (row[8]) hors.push(String(row[8]).trim());
+          const horStr = hors.filter(Boolean).join('\n');
+
           alunosParaSalvarNoBanco.push([mat, nome, curso, telStr, horStr]);
         }
+
         if (alunosParaSalvarNoBanco.length === 0) {
             alert("⚠️ Nenhum aluno válido encontrado nesta planilha.");
             input.value = "";
             return;
         }
 
+        const listaTurmas = Array.from(turmasEncontradas);
         alunosParaImportarTemp = alunosParaSalvarNoBanco;
-        turmaImportacaoTemp = turmaIdentificada;
+        turmaImportacaoTemp = listaTurmas[0] || "";
         document.getElementById('import-qtd-alunos').innerText = alunosParaSalvarNoBanco.length;
-        document.getElementById('import-turma-nome').innerText = turmaIdentificada;
+        document.getElementById('import-turma-nome').innerText = listaTurmas.join(', ') || "Não identificada";
         document.getElementById('modalOpcoesImportacao').style.display = 'flex';
         input.value = ""; 
       };
@@ -1914,12 +1925,12 @@ function fazerLogin() {
     }
 
     function executarImportacao(modo) {
-        document.getElementById('modalOpcoesImportacao').style.display = 'none';
-        let acaoBackend = modo === 'sincronizar' ? 'sincronizarTurma' : 'substituirTurma';
-
-        if (modo === 'substituir' && !confirm(`Tem absoluta certeza que deseja EXCLUIR e substituir todos os alunos da turma ${turmaImportacaoTemp}?`)) {
+        if (modo === 'substituir' && !confirm(`Tem absoluta certeza que deseja EXCLUIR todos os alunos atuais da turma "${turmaImportacaoTemp}" e substituir pela nova planilha?\n\n(Obs: Formulários antigos e alunos que já responderam permanecerão preservados.)`)) {
             return;
         }
+
+        document.getElementById('modalOpcoesImportacao').style.display = 'none';
+        let acaoBackend = modo === 'sincronizar' ? 'sincronizarTurma' : 'substituirTurma';
 
         document.getElementById('tbody-banco-alunos').innerHTML = `<tr><td colspan="6" style="text-align: center; color: #999; padding: 30px;">⏳ Processando a turma ${turmaImportacaoTemp}... Aguarde.</td></tr>`;
 
@@ -1929,11 +1940,17 @@ function fazerLogin() {
         })
         .then(r => r.json())
         .then(res => {
-            alert(`✅ Importação concluída com sucesso!`);
+            if (res && res.status === 'error') {
+                alert("⚠️ Erro na importação: " + res.message);
+            } else if (modo === 'sincronizar') {
+                alert(`✅ Sincronização concluída!\n\n• Novos alunos adicionados: ${res.adicionados ?? 0}\n• Alunos existentes atualizados: ${res.atualizados ?? 0}`);
+            } else {
+                alert(`✅ Turma substituída com sucesso!\n\n• Alunos cadastrados: ${res.inseridos ?? alunosParaImportarTemp.length}`);
+            }
             fetch(API_URL + "?action=buscarAlunos").then(r => r.json()).then(renderizarBancoDeAlunos);
         })
-        .catch(erro => {
-            alert("⚠️ Erro na importação.");
+        .catch(() => {
+            alert("⚠️ Erro de comunicação durante a importação. Recarregando lista atual...");
             fetch(API_URL + "?action=buscarAlunos").then(r => r.json()).then(renderizarBancoDeAlunos);
         });
     }
@@ -1970,13 +1987,14 @@ function fazerLogin() {
       } else { alert("Limite máximo de 3 horários."); }
     }
 
-    function salvarAlunoManual() {
-      const mat = document.getElementById('add-mat').value;
-      const nome = document.getElementById('add-nome').value;
+   function salvarAlunoManual() {
+      const matBruta = document.getElementById('add-mat').value.replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').trim();
+      const mat = matBruta.replace(/\D/g, '') || matBruta;
+      const nome = document.getElementById('add-nome').value.trim();
       const curso = document.getElementById('add-curso').value;
       
       let telefones = []; 
-      document.querySelectorAll('.add-tel-input').forEach(inp => { if(inp.value.trim() !== "") telefones.push(inp.value); });
+      document.querySelectorAll('.add-tel-input').forEach(inp => { if(inp.value.trim() !== "") telefones.push(inp.value.trim()); });
       const telStrParaPlanilha = telefones.join('\n');
 
       let horarios = []; 
@@ -1990,19 +2008,26 @@ function fazerLogin() {
       if(!mat || !nome) { alert("Preencha ao menos Matrícula e Nome!"); return; }
       const param = { mat: mat, nome: nome, curso: curso, telefones: telStrParaPlanilha, horarios: horStrParaPlanilha, matOriginal: currentEditingMatricula }; 
       
+      const btnSalvar = document.querySelector('#modalAddAluno button[onclick="salvarAlunoManual()"]');
+      if (btnSalvar) { btnSalvar.disabled = true; btnSalvar.innerText = "⏳ Salvando..."; }
+
       fetch(API_URL, {
           method: 'POST',
           body: JSON.stringify({action: 'salvarAluno', param: param})
       })
       .then(r => r.json())
       .then(() => {
+          if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.innerText = "Salvar Aluno na Base"; }
           document.getElementById('modalAddAluno').style.display = 'none';
           alert("Base acadêmica atualizada com sucesso!");
           fetch(API_URL + "?action=buscarAlunos").then(r => r.json()).then(renderizarBancoDeAlunos);
       })
-      .catch(e => alert("Erro ao salvar aluno."));
+      .catch(() => {
+          if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.innerText = "Salvar Aluno na Base"; }
+          alert("Erro ao salvar aluno.");
+      });
     }
-
+    
     function aplicarMascaraTelefone(input) {
       let v = input.value.replace(/\D/g, ''); 
       if (v.length > 11) v = v.substring(0, 11); 
