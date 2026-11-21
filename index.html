@@ -4,7 +4,7 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portal de Monitoramento e Controle de Formulários</title>
+  <title>Portal de Criação de Formulários</title>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
@@ -1369,6 +1369,97 @@ function abrirModalWaSeller(origem) {
           prazo: '',
           link: ''
         }));
+    }
+
+    function togglePainelVariaveisWaSeller() {
+      const painel = document.getElementById('ws-painel-variaveis');
+      const arrow = document.getElementById('ws-vars-arrow');
+      const abrir = painel.style.display === 'none';
+      painel.style.display = abrir ? 'block' : 'none';
+      arrow.innerText = abrir ? '▲' : '▼';
+    }
+
+    function adicionarVariavelFixaWaSeller(nomeCol = '', valorFixo = '') {
+      const container = document.getElementById('ws-variaveis-fixas-container');
+      const div = document.createElement('div');
+      div.className = 'ws-var-row ws-fixed-var-row';
+      div.style.gridTemplateColumns = '1fr 1.3fr auto';
+      div.innerHTML = `
+        <input type="text" class="ws-fixed-key" value="${nomeCol}" placeholder="Coluna (ex: Etiqueta, Origem)" oninput="atualizarPreviewWaSeller()">
+        <input type="text" class="ws-fixed-val" value="${valorFixo}" placeholder="Valor fixo (ex: Pendente Prática)" oninput="atualizarPreviewWaSeller()">
+        <button type="button" style="color:#DC2626; background:none; border:none; cursor:pointer; font-weight:bold; font-size:1.1rem;" onclick="this.parentElement.remove(); atualizarPreviewWaSeller();" title="Remover">✕</button>
+      `;
+      container.appendChild(div);
+      atualizarPreviewWaSeller();
+    }
+
+    function montarMatrizWaSeller() {
+      const incluir55 = document.getElementById('ws-incluir-55').checked;
+      const removerDup = document.getElementById('ws-remover-duplicados').checked;
+
+      const colunas = [
+        { tipo: 'nome', titulo: 'Nome' },
+        { tipo: 'telefone', titulo: 'Telefone' }
+      ];
+
+      if (document.getElementById('ws-col-curso').checked) {
+        colunas.push({ tipo: 'curso', titulo: document.getElementById('ws-col-curso-nome').value.trim() || 'Curso' });
+      }
+      if (document.getElementById('ws-col-matricula').checked) {
+        colunas.push({ tipo: 'matricula', titulo: document.getElementById('ws-col-matricula-nome').value.trim() || 'Matricula' });
+      }
+      if (document.getElementById('ws-col-horario').checked) {
+        colunas.push({ tipo: 'horario', titulo: document.getElementById('ws-col-horario-nome').value.trim() || 'Horario' });
+      }
+      if (wsOrigemAtual === 'resultados') {
+        if (document.getElementById('ws-col-pratica').checked) {
+          colunas.push({ tipo: 'pratica', titulo: document.getElementById('ws-col-pratica-nome').value.trim() || 'Pratica' });
+        }
+        if (document.getElementById('ws-col-prazo').checked) {
+          colunas.push({ tipo: 'prazo', titulo: document.getElementById('ws-col-prazo-nome').value.trim() || 'Prazo' });
+        }
+        if (document.getElementById('ws-col-link').checked) {
+          colunas.push({ tipo: 'link', titulo: document.getElementById('ws-col-link-nome').value.trim() || 'Link' });
+        }
+      }
+
+      document.querySelectorAll('.ws-fixed-var-row').forEach(row => {
+        const k = row.querySelector('.ws-fixed-key').value.trim();
+        const v = row.querySelector('.ws-fixed-val').value.trim();
+        if (k) colunas.push({ tipo: 'fixa', titulo: k, valor: v });
+      });
+
+      const registros = coletarRegistrosBaseWaSeller();
+      const cabecalho = colunas.map(c => c.titulo);
+      const linhas = [];
+      const telefonesVistos = new Set();
+      let duplicadosIgnorados = 0;
+
+      registros.forEach(reg => {
+        const nomeLimpo = limparNomeWaSeller(reg.nome);
+        if (!nomeLimpo) return;
+
+        (reg.telefones || []).forEach(telRaw => {
+          const telLimpo = higienizarTelefoneWaSeller(telRaw, incluir55);
+          if (!telLimpo) return;
+
+          if (removerDup && telefonesVistos.has(telLimpo)) {
+            duplicadosIgnorados++;
+            return;
+          }
+          telefonesVistos.add(telLimpo);
+
+          const linha = colunas.map(col => {
+            if (col.tipo === 'nome') return nomeLimpo;
+            if (col.tipo === 'telefone') return telLimpo;
+            if (col.tipo === 'fixa') return col.valor || '';
+            return String(reg[col.tipo] || '').trim();
+          });
+          linhas.push(linha);
+        });
+      });
+
+      return { cabecalho, linhas, totalAlunos: registros.length, duplicadosIgnorados };
     }
 
     function atualizarPreviewWaSeller() {
