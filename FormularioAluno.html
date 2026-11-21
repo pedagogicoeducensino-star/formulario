@@ -63,6 +63,7 @@
       box-shadow: 0 4px 6px rgba(212, 175, 55, 0.3);
     }
     .btn:hover { background-color: #C5A030; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(212, 175, 55, 0.4); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     
     .preview-page { display: none; }
     .preview-page.active-page { display: block; animation: fadeIn 0.5s ease; }
@@ -82,7 +83,6 @@
 </head>
 <body>
 
-  <!-- Alerta Elegante -->
   <div id="alerta-elegante" class="modal-overlay">
     <div class="modal-box">
       <div class="emoji-animado" style="font-size:3.5rem; margin-bottom:15px;">⚠️</div>
@@ -100,11 +100,10 @@
 
   <script>
     // =========================================================================
-    // 1. CONFIGURAÇÃO DA API 
+    // 1. CONFIGURAÇÃO DA API (DEVE SER EXATAMENTE A MESMA URL DO index.html)
     // =========================================================================
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwo0rtQmGFQFEtu1Xgtth0TuKQ65QeMzhgiFGHAbLemPIEv8wpDxN37c_L4j3A2QhM/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxz6CzvGvOH3C3cA1nxnr2eBvfH4c5xpjgVij5aDdMTayZhkIWOaWkiT6s46NcCB6sK/exec';
     
-    // 2. PEGA O ID DO FORMULÁRIO DIRETO DO LINK DO GITHUB
     const urlParams = new URLSearchParams(window.location.search);
     const idDoFormulario = urlParams.get('id');
     // =========================================================================
@@ -116,6 +115,9 @@
 
     var tituloDaPratica = "Prática Profissional"; 
     var nomeDoAlunoGlobal = ""; 
+    var matriculaValidadaGlobal = "";
+    var buscaSeqId = 0;
+    var enviandoFormulario = false;
 
     function alertaElegante(mensagem) {
         document.getElementById('msg-alerta-elegante').innerText = mensagem;
@@ -151,11 +153,10 @@
     }
 
     if (idDoFormulario) {
-        // CORREÇÃO 1: 'action=buscarFormularioAluno' para bater com o Código.gs
-        fetch(API_URL + "?action=buscarFormularioAluno&id=" + idDoFormulario)
+        fetch(API_URL + "?action=buscarFormularioAluno&id=" + encodeURIComponent(idDoFormulario))
             .then(r => r.json())
             .then(resposta => {
-                if(resposta.error || resposta.erro) throw new Error(resposta.error || resposta.erro || resposta.message);
+                if(!resposta || resposta.error || resposta.erro) throw new Error((resposta && (resposta.error || resposta.erro || resposta.message)) || "Formulário não encontrado.");
                 renderizarFormulario(resposta); 
             })
             .catch(erro => {
@@ -173,32 +174,24 @@
         tituloDaPratica = dadosForm.titulo || dadosForm.nome || "Prática Profissional";
         var prazoString = dadosForm.prazo || dadosForm.dataLimite || "Sem limite";
 
-        // ==========================================
-        // VERIFICAÇÃO DE DATA LIMITE (PRAZO EXPIRADO)
-        // ==========================================
         if (prazoString && prazoString !== "Sem limite" && prazoString.includes('/')) {
             var partes = prazoString.split('/');
             if (partes.length === 3) {
-                // Monta a data limite configurando o horário para 23:59:59 daquele dia
                 var dataPrazo = new Date(partes[2], partes[1] - 1, partes[0], 23, 59, 59);
                 var hoje = new Date();
-                
                 if (hoje > dataPrazo) {
                     mostrarBloqueio(
                         "Prazo Encerrado", 
                         "Esta Prática Profissionalizante não aceita mais respostas, pois a data limite (<strong>" + prazoString + "</strong>) já expirou.<br><br>Procure orientações com a coordenação ou a Sala de Aula."
                     );
-                    return; // Para a execução aqui e não carrega as perguntas
+                    return;
                 }
             }
         }
-        // ==========================================
         
         var pacoteDeDados = dadosForm.jsonPerguntas || dadosForm.htmlProva || dadosForm.html || dadosForm.conteudo || dadosForm.prova || dadosForm.dados || "";
-        
         if (!pacoteDeDados) {
-            var respostaBruta = JSON.stringify(dadosForm);
-            throw new Error("O Google Script enviou os dados errados. A resposta dele foi exatamente esta: " + respostaBruta);
+            throw new Error("O Google Script enviou os dados incompletos: " + JSON.stringify(dadosForm));
         }
         
         var htmlLimpo = decodeURIComponent(pacoteDeDados);
@@ -222,14 +215,23 @@
                     }
                 }
             }
-        } catch(e1) { console.log("Aviso: Falha na limpeza visual.", e1); }
+        } catch(e1) {}
 
         try {
             var inputMat = document.getElementById('aluno_matricula');
             var inputCont = document.getElementById('aluno_contato');
             
             if (inputMat && inputCont) {
-               inputMat.addEventListener('input', function() { buscarNomeAluno(this.value); });
+               // Remove o oninput embutido no HTML antigo para evitar disparo duplo
+               inputMat.removeAttribute('oninput');
+               inputMat.oninput = null;
+               inputMat.addEventListener('input', function() {
+                   this.value = this.value.replace(/[^0-9]/g, '');
+                   nomeDoAlunoGlobal = "";
+                   matriculaValidadaGlobal = "";
+                   buscarNomeAluno(this.value);
+               });
+
                var textoContato = (inputCont.type === 'email') ? 'E-mail' : 'WhatsApp';
 
                var mestreDestacada = document.createElement('div');
@@ -281,7 +283,7 @@
                    } else page0.appendChild(mestreDestacada);
                }
             }
-        } catch(e3) { console.log("Aviso: Falha ao organizar campos de identificação.", e3); }
+        } catch(e3) {}
 
         try {
             var labels = container.getElementsByTagName('label');
@@ -302,14 +304,14 @@
                   }
                }
             }
-        } catch(e4) { console.log("Aviso: Falha na limpeza das opções de agendamento.", e4); }
+        } catch(e4) {}
 
         try {
             document.querySelectorAll('.preview-page').forEach(function(p){ p.classList.remove('active-page'); });
             var page0Final = document.getElementById('page-0');
             if(page0Final) page0Final.classList.add('active-page');
             else if(document.getElementById('page-1')) document.getElementById('page-1').classList.add('active-page');
-        } catch(e5) { console.log("Aviso: Falha ao iniciar a página do formulário.", e5); }
+        } catch(e5) {}
 
       } catch (e) {
           console.error(e);
@@ -321,12 +323,13 @@
     function buscarNomeAluno(matricula) {
       var saudacaoP = document.getElementById('texto-nome-aluno');
       var containerSaudacao = document.getElementById('caixa-verde-saudacao');
-      
       if (!saudacaoP || !containerSaudacao) return;
-      
-      if (matricula.trim().length === 0) { 
+
+      var matLimpa = (matricula || '').trim();
+      if (matLimpa.length === 0) { 
           saudacaoP.innerHTML = ""; 
           nomeDoAlunoGlobal = "";
+          matriculaValidadaGlobal = "";
           containerSaudacao.style.display = 'none';
           return; 
       }
@@ -336,14 +339,18 @@
       saudacaoP.style.color = "var(--text-light)";
 
       clearTimeout(timerBuscaMatricula);
+      var reqAtual = ++buscaSeqId;
+
       timerBuscaMatricula = setTimeout(function() {
-          // CORREÇÃO 2: 'action=buscarNomeAluno'
-          fetch(API_URL + "?action=buscarNomeAluno&matricula=" + matricula)
+          fetch(API_URL + "?action=buscarNomeAluno&matricula=" + encodeURIComponent(matLimpa))
             .then(r => r.json())
             .then(nomeEncontrado => {
+              if (reqAtual !== buscaSeqId) return; // Ignora resposta atrasada de digitação anterior
+
               if (nomeEncontrado && nomeEncontrado.nome && nomeEncontrado.nome.trim() !== "") {
                  var nomeFormatado = formatarNomeProprio(nomeEncontrado.nome);
                  nomeDoAlunoGlobal = nomeFormatado;
+                 matriculaValidadaGlobal = matLimpa;
                  
                  var hora = new Date().getHours();
                  var saudacao = "Bom dia";
@@ -353,14 +360,16 @@
                  saudacaoP.innerHTML = "👋 <strong style='color:#4B5563;'>" + saudacao + ",</strong> <span style='font-size:1.2rem; font-weight:700; color:#065F46; display:inline-block; margin-left:4px;'>" + nomeFormatado + "</span>";
               } else {
                  nomeDoAlunoGlobal = "";
+                 matriculaValidadaGlobal = "";
                  saudacaoP.innerHTML = "⚠️ <strong style='color:#DC2626;'>Matrícula não encontrada no sistema.</strong> <span style='font-size:0.95rem; color:#6B7280; display:block; margin-top:2px;'>Por favor, procure a coordenação para orientações.</span>";
               }
             })
-            .catch(erro => {
+            .catch(() => {
+               if (reqAtual !== buscaSeqId) return;
                saudacaoP.innerHTML = "⚠️ Erro de conexão ao buscar. Tente novamente.";
                saudacaoP.style.color = "#DC2626";
             });
-      }, 600);
+      }, 450);
     }
 
     function aplicarMascaraTelefone(input) {
@@ -391,12 +400,14 @@
 
     var currentPage = 0;
 
-    function navPreview(direction) {
+    async function navPreview(direction) {
       if (direction === 1) { 
         if (currentPage === 0) {
           var hasError = false;
           var matInput = document.getElementById('aluno_matricula');
-          if (matInput && matInput.value.trim() === '') {
+          var matDigitada = matInput ? matInput.value.trim() : '';
+
+          if (matInput && matDigitada === '') {
              alertaElegante("Por favor, preencha sua Matrícula Acadêmica.");
              matInput.style.borderColor = "#DC2626";
              hasError = true;
@@ -415,31 +426,41 @@
           }
           if (hasError) return;
 
-          if (matInput && matInput.value.trim() !== '') {
-             if (!nomeDoAlunoGlobal || nomeDoAlunoGlobal.trim() === "") {
-                 alertaElegante("Matrícula não encontrada no sistema. Por favor, procure a coordenação para orientações.");
-                 matInput.style.borderColor = "#DC2626";
-                 return;
-             }
-
+          if (matInput && matDigitada !== '') {
              var page0 = document.getElementById('page-0');
              var botoes = page0 ? page0.getElementsByTagName('button') : [];
              var btn = botoes.length > 0 ? botoes[botoes.length - 1] : null;
              var txtOrig = btn ? btn.innerText : "Iniciar";
              if (btn) { btn.innerText = "⏳ Verificando..."; btn.disabled = true; }
 
-             // CORREÇÃO 3: 'action=verificarDuplicidade&formId=...'
-             fetch(API_URL + "?action=verificarDuplicidade&formId=" + idDoFormulario + "&matricula=" + matInput.value.trim())
-                .then(r => r.json())
-                .then(resposta => {
-                    if (btn) { btn.innerText = txtOrig; btn.disabled = false; }
-                    if (resposta.duplicado) mostrarBloqueio("Agendamento Já Realizado", "Olá, " + (nomeDoAlunoGlobal || 'Aluno(a)') + "!<br>Identificamos que você <strong>já enviou suas respostas</strong>.");
-                    else continuarTransicao(direction);
-                })
-                .catch(erro => {
-                    if (btn) { btn.innerText = txtOrig; btn.disabled = false; }
-                    continuarTransicao(direction);
-                });
+             try {
+               // Se o aluno clicou rápido antes da busca automática terminar, consulta na hora
+               if (!nomeDoAlunoGlobal || matriculaValidadaGlobal !== matDigitada) {
+                 var respNome = await fetch(API_URL + "?action=buscarNomeAluno&matricula=" + encodeURIComponent(matDigitada)).then(r => r.json());
+                 if (respNome && respNome.nome && respNome.nome.trim() !== "") {
+                   nomeDoAlunoGlobal = formatarNomeProprio(respNome.nome);
+                   matriculaValidadaGlobal = matDigitada;
+                 } else {
+                   if (btn) { btn.innerText = txtOrig; btn.disabled = false; }
+                   alertaElegante("Matrícula não encontrada no sistema. Por favor, procure a coordenação para orientações.");
+                   matInput.style.borderColor = "#DC2626";
+                   return;
+                 }
+               }
+
+               // Verifica duplicidade no banco (NUNCA libera se houver erro de rede)
+               var respDup = await fetch(API_URL + "?action=verificarDuplicidade&formId=" + encodeURIComponent(idDoFormulario) + "&matricula=" + encodeURIComponent(matDigitada)).then(r => r.json());
+               if (btn) { btn.innerText = txtOrig; btn.disabled = false; }
+
+               if (respDup && respDup.duplicado) {
+                 mostrarBloqueio("Agendamento Já Realizado", "Olá, " + (nomeDoAlunoGlobal || 'Aluno(a)') + "!<br>Identificamos que você <strong>já enviou suas respostas</strong> para este formulário.");
+               } else {
+                 continuarTransicao(direction);
+               }
+             } catch (erro) {
+               if (btn) { btn.innerText = txtOrig; btn.disabled = false; }
+               alertaElegante("Não foi possível verificar sua matrícula por instabilidade na internet. Aguarde alguns segundos e clique em Iniciar novamente.");
+             }
              return; 
           }
         }
@@ -471,18 +492,14 @@
                      for (var r = 0; r < radios.length; r++) {
                          var rd = radios[r];
                          var labelExata = document.querySelector('label[for="' + rd.id + '"]');
-                         
                          var inputEscondido = (rd.style.display === 'none' || rd.offsetWidth === 0);
                          var labelEscondida = (labelExata && (labelExata.style.display === 'none' || labelExata.offsetWidth === 0));
-                         
                          if (!inputEscondido && !labelEscondida) {
                              todosOcultos = false;
                              break;
                          }
                      }
-                     if (todosOcultos) {
-                         erroVagasEsgotadas = true;
-                     }
+                     if (todosOcultos) erroVagasEsgotadas = true;
                  }
              } 
              else { box.style.border = "1px solid #E5E7EB"; }
@@ -560,7 +577,6 @@
                     temResposta = true;
                     var title = box.querySelector('strong');
                     var titleTxt = title ? title.innerText.replace('*', '').trim() : "Pergunta";
-                    
                     var displayValue = inp.value;
                     if (displayValue.indexOf('| restam') !== -1) displayValue = displayValue.split('|')[0].trim();
                     html += '<div style="margin-bottom:15px; background:#F9FAFB; padding:10px 15px; border-radius:8px;"><strong style="color:var(--text-light); font-size:0.85rem; text-transform:uppercase;">' + titleTxt + '</strong><br><span style="color:var(--sidebar-bg); font-size:1.15rem; font-weight:600;">' + displayValue + '</span></div>';
@@ -578,6 +594,9 @@
     }
 
     function enviarFormularioReal() {
+      // Trava contra clique duplo / envio repetido
+      if (enviandoFormulario) return;
+
       var pageObj = document.getElementById('page-' + currentPage);
       if (pageObj) {
           var allValid = true;
@@ -585,7 +604,6 @@
           
           pageObj.querySelectorAll('.req-check-item').forEach(function(box) {
               var answered = false;
-              
               box.querySelectorAll('.input-ans').forEach(function(i) {
                 if(i.type === 'radio' || i.type === 'checkbox') { 
                     if(i.checked) answered = true; 
@@ -597,25 +615,20 @@
               if(!answered) { 
                   allValid = false; 
                   box.style.border = "2px solid #DC2626"; 
-                  
                   var radios = box.querySelectorAll('input[type="radio"], input[type="checkbox"]');
                   if (radios.length > 0) {
                       var todosOcultos = true;
                       for (var r = 0; r < radios.length; r++) {
                           var rd = radios[r];
                           var labelExata = document.querySelector('label[for="' + rd.id + '"]');
-                          
                           var inputEscondido = (rd.style.display === 'none' || rd.offsetWidth === 0);
                           var labelEscondida = (labelExata && (labelExata.style.display === 'none' || labelExata.offsetWidth === 0));
-                          
                           if (!inputEscondido && !labelEscondida) {
                               todosOcultos = false;
                               break;
                           }
                       }
-                      if (todosOcultos) {
-                          erroVagasEsgotadas = true;
-                      }
+                      if (todosOcultos) erroVagasEsgotadas = true;
                   }
               }
               else { box.style.border = "1px solid #E5E7EB"; }
@@ -630,6 +643,8 @@
               return; 
           }
       }
+
+      enviandoFormulario = true;
 
       var matInput = document.getElementById('aluno_matricula');
       var matriculaAluno = matInput ? matInput.value.trim() : 'Anônimo';
@@ -653,6 +668,7 @@
       var dadosParaOBackend = {
          formId: idDoFormulario, 
          matricula: matriculaAluno,
+         nomeAluno: nomeDoAlunoGlobal,
          email: emailAluno,
          whatsapp: zapAluno,
          tituloPratica: tituloDaPratica,
@@ -661,15 +677,30 @@
       };
 
       var container = document.getElementById('conteudo-form');
-      container.innerHTML = '<div style="text-align:center; padding: 60px;"><div class="emoji-animado">⏳</div><h2 style="color: var(--sidebar-bg); margin-top:20px;">Registrando sua prática...</h2></div>';
+      var htmlBackupAntesEnvio = container.innerHTML;
+      container.innerHTML = '<div style="text-align:center; padding: 60px;"><div class="emoji-animado">⏳</div><h2 style="color: var(--sidebar-bg); margin-top:20px;">Registrando sua prática...</h2><p style="color:#6B7280;">Por favor, aguarde sem fechar ou atualizar esta página.</p></div>';
 
-      // CORREÇÃO 4: 'action: salvarResposta' e 'dadosAluno: ...'
       fetch(API_URL, {
           method: 'POST',
           body: JSON.stringify({action: 'salvarResposta', dadosAluno: dadosParaOBackend})
       })
       .then(r => r.json())
       .then(resposta => {
+            if (resposta && (resposta.duplicado || resposta.resultado === 'DUPLICADO')) {
+                mostrarBloqueio("Agendamento Já Realizado", "Olá, " + (nomeDoAlunoGlobal || 'Aluno(a)') + "!<br>Identificamos que sua matrícula <strong>já possui um agendamento registrado</strong> para este formulário.");
+                return;
+            }
+            if (resposta && (resposta.expirado || resposta.resultado === 'EXPIRADO')) {
+                mostrarBloqueio("Prazo Encerrado", "Esta prática já atingiu a data limite e não aceita mais respostas.");
+                return;
+            }
+            if (resposta && resposta.status === 'error') {
+                enviandoFormulario = false;
+                container.innerHTML = htmlBackupAntesEnvio;
+                alertaElegante(resposta.message || "Ocorreu um erro ao registrar sua resposta. Tente novamente.");
+                return;
+            }
+
             var htmlRespostasExtraidas = "";
             var temRespostas = false;
 
@@ -693,7 +724,6 @@
             var btnWhats = "";
             if (zapAluno && zapAluno.length >= 10) {
                var numLimpo = zapAluno.length === 11 ? "55" + zapAluno : zapAluno;
-               
                var textoWhats = "Agendamento Concluído!\n" +
                                 "Sua resposta foi registrada com sucesso.\n\n" +
                                 "📋 Detalhes do seu Registro:\n" +
@@ -709,7 +739,7 @@
                }
 
                var linkWhats = "https://api.whatsapp.com/send?phone=" + numLimpo + "&text=" + encodeURIComponent(textoWhats);
-btnWhats = '<a href="' + linkWhats + '" class="btn" style="background:#25D366; color:white; text-decoration:none; display:inline-block; margin-top:10px; padding:15px 30px; border-radius:8px;">📱 Enviar recibo pelo WhatsApp</a>';
+               btnWhats = '<a href="' + linkWhats + '" class="btn" style="background:#25D366; color:white; text-decoration:none; display:inline-block; margin-top:10px; padding:15px 30px; border-radius:8px;">📱 Enviar recibo pelo WhatsApp</a>';
             }
 
             var msgEmail = "";
@@ -721,9 +751,10 @@ btnWhats = '<a href="' + linkWhats + '" class="btn" style="background:#25D366; c
 
             document.getElementById('conteudo-form').innerHTML = htmlSucesso;
       })
-      .catch(erro => {
-            alertaElegante("Ocorreu um erro ao enviar. Tente novamente.");
-            window.location.reload(); 
+      .catch(() => {
+            enviandoFormulario = false;
+            container.innerHTML = htmlBackupAntesEnvio;
+            alertaElegante("Houve uma oscilação de conexão ao enviar. Clique novamente em 'Confirmar e Enviar' — se o primeiro envio já tiver sido registrado, o sistema avisará automaticamente sem duplicar.");
       });
     }
   </script>
